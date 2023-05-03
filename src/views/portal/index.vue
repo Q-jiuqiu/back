@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-03 21:49:44
+ * @LastEditTime: 2023-05-03 22:23:59
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -10,7 +10,11 @@
   <div class="portal-container">
     <!-- 操作按钮 -->
     <div class="operation">
-      <el-button type="primary" size="medium" @click="handleShopAdd">
+      <el-button
+        type="primary"
+        size="medium"
+        @click="handleShopAdd"
+      >
         新增门店
       </el-button>
       <el-button
@@ -33,13 +37,35 @@
         @selection-change="handleSelectionChange"
         @row-click="handleRowClick"
       >
-        <el-table-column type="selection" width="55"> </el-table-column>
-        <el-table-column fixed prop="date" label="日期"> </el-table-column>
-        <el-table-column prop="name" label="姓名"> </el-table-column>
-        <el-table-column prop="province" label="省份"> </el-table-column>
-        <el-table-column prop="city" label="市区"> </el-table-column>
-        <el-table-column prop="address" label="地址"> </el-table-column>
-        <el-table-column prop="zip" label="邮编"> </el-table-column>
+        <el-table-column
+          type="selection"
+          width="55"
+        />
+        <el-table-column
+          fixed
+          prop="date"
+          label="日期"
+        />
+        <el-table-column
+          prop="name"
+          label="姓名"
+        />
+        <el-table-column
+          prop="province"
+          label="省份"
+        />
+        <el-table-column
+          prop="city"
+          label="市区"
+        />
+        <el-table-column
+          prop="address"
+          label="地址"
+        />
+        <el-table-column
+          prop="zip"
+          label="邮编"
+        />
       </el-table>
     </div>
   </div>
@@ -54,146 +80,146 @@ export default {
         {
           date: "2016-05-03",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-02",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-04",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-01",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-08",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-06",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-07",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-03",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-02",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-04",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-01",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-08",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-06",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-07",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-03",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-02",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-04",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-01",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-08",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-06",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-07",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-03",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-02",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-04",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-01",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-08",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-06",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
+          address: "上海市普陀区金沙江路 1518 弄"
         },
         {
           date: "2016-05-07",
           name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄",
-        },
+          address: "上海市普陀区金沙江路 1518 弄"
+        }
       ],
       multipleSelection: [], // 表格选中项
-      delLoading: false,
+      delLoading: false
     };
   },
   methods: {
@@ -225,29 +251,29 @@ export default {
       if (this.multipleSelection.length === 0) {
         this.$message({
           message: "未选中需门店",
-          type: "warning",
+          type: "warning"
         });
         return;
       }
       this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
+        type: "warning"
       })
         .then(() => {
           this.$message({
             type: "success",
-            message: "删除成功!",
+            message: "删除成功!"
           });
         })
         .catch(() => {
           this.$message({
             type: "info",
-            message: "已取消删除",
+            message: "已取消删除"
           });
         });
-    },
-  },
+    }
+  }
 };
 </script>
 
@@ -260,7 +286,7 @@ export default {
   .operation {
     display: flex;
     align-items: center;
-    justify-content: end;
+    justify-content: flex-end;
     width: 100%;
   }
   .table-container {

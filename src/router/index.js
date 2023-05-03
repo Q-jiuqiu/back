@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-03 21:46:23
+ * @LastEditTime: 2023-05-03 22:12:45
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -42,13 +42,13 @@ export const constantRoutes = [
   {
     path: "/login",
     component: () => import("@/views/login/index"),
-    hidden: true,
+    hidden: true
   },
 
   {
     path: "/404",
     component: () => import("@/views/404"),
-    hidden: true,
+    hidden: true
   },
 
   {
@@ -60,27 +60,27 @@ export const constantRoutes = [
         path: "portal",
         name: "Portal",
         component: () => import("@/views/portal/index"),
-        meta: { title: "首页", icon: "dashboard" },
+        meta: { title: "首页", icon: "dashboard" }
       },
       {
         path: "addShop",
         name: "AddShop",
         hidden: true,
         component: () => import("@/views/addShop/index"),
-        meta: { title: "新增门店", icon: "dashboard" },
-      },
-    ],
+        meta: { title: "新增门店", icon: "dashboard" }
+      }
+    ]
   },
 
   // 404 page must be placed at the end !!!
-  { path: "*", redirect: "/404", hidden: true },
+  { path: "*", redirect: "/404", hidden: true }
 ];
 
 const createRouter = () =>
   new Router({
     // mode: 'history', // require service support
     scrollBehavior: () => ({ y: 0 }),
-    routes: constantRoutes,
+    routes: constantRoutes
   });
 
 const router = createRouter();

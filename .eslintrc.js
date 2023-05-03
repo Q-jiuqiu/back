@@ -50,7 +50,7 @@ module.exports = {
         properties: "always",
       },
     ],
-    trailingComma: "none",
+    "comma-dangle": 0,
     "comma-dangle": [2, "never"],
     "comma-spacing": [
       2,
