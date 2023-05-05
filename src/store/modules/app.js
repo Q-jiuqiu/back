@@ -1,10 +1,18 @@
+/*
+ * @Author: quling
+ * @Date: 2023-04-27 22:44:28
+ * @LastEditors: quling
+ * @LastEditTime: 2023-05-05 21:41:48
+ * @Description:
+ * @FilePath: \vue-admin-template\src\store\modules\app.js
+ */
 import Cookies from "js-cookie";
 
 const state = {
   sidebar: {
     opened: Cookies.get("sidebarStatus")
-      ? !!+Cookies.get("sidebarStatus")
-      : true,
+      ? true
+      : !!+Cookies.get("sidebarStatus"),
     withoutAnimation: false
   },
   device: "desktop"

@@ -61,13 +61,6 @@ export const constantRoutes = [
         name: "Portal",
         component: () => import("@/views/portal/index"),
         meta: { title: "首页", icon: "dashboard" }
-      },
-      {
-        path: "addShop",
-        name: "AddShop",
-        hidden: true,
-        component: () => import("@/views/addShop/index"),
-        meta: { title: "新增门店", icon: "dashboard" }
       }
     ]
   },
