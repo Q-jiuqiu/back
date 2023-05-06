@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-05 21:52:16
+ * @LastEditTime: 2023-05-06 21:43:56
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -72,11 +72,12 @@
             <el-button
               type="text"
               size="small"
-              @click.stop="handleClick(scope.row)"
+              @click.stop="handlePreview(scope.row)"
             >查看</el-button>
             <el-button
               type="text"
               size="small"
+              @click.stop="handleEdit(scope.row)"
             >编辑</el-button>
           </template>
         </el-table-column>
@@ -93,42 +94,51 @@
       >
         {{ dialogTitle }}
         <i
-          v-if="isEdit"
-          class="el-icon-edit"
+          v-if="canEdit"
+          class="icon el-icon-edit"
+          @click="handleFormEdit"
         />
       </span>
       <div class="dialog-container">
         <div class="top">
           <div class="left">
             <div class="item">
-              <span class="label">门店名称</span>
+              <span class="label">门店名称：</span>
               <el-input
+                v-if="isEdit"
                 v-model="shopName"
                 autocomplete="off"
               />
+              <span v-else>{{ shopName }}</span>
             </div>
             <div class="item">
-              <span class="label">经度</span>
+              <span class="label">经度：</span>
               <el-input
+                v-if="isEdit"
                 v-model="longitude"
                 autocomplete="off"
               />
+              <span v-else>{{ longitude }}</span>
             </div>
             <div class="item">
-              <span class="label">纬度</span>
+              <span class="label">纬度：</span>
               <el-input
+                v-if="isEdit"
                 v-model="latitude"
                 autocomplete="off"
               />
+              <span v-else>{{ latitude }}</span>
             </div>
             <div class="item">
-              <span class="label">门店描述</span>
+              <span class="label">门店描述：</span>
               <el-input
+                v-if="isEdit"
                 v-model="desc"
                 type="textarea"
                 :rows="2"
                 placeholder="请输入内容"
               />
+              <span v-else>{{ desc }}</span>
             </div>
           </div>
           <div class="right">
@@ -175,9 +185,23 @@
           </div>
         </div>
       </div>
-      <span slot="footer" class="dialog-footer">
-        <el-button size="medium" @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" size="medium" @click="dialogVisible = false">确 定</el-button>
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button
+          size="medium"
+          @click="dialogVisible = false"
+        >
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          size="medium"
+          @click="dialogVisible = false"
+        >
+          确定
+        </el-button>
       </span>
     </el-dialog>
     <el-dialog :visible.sync="dialogImgVisible">
@@ -349,7 +373,8 @@ export default {
       dialogImageUrl: "", // 图片预览地址
       hasImg: false, // 是否有图片
       picture: null, // 图片-文件
-      isEdit: false
+      canEdit: false, // 能否编辑 是否显示编辑图标
+      isEdit: true // 是否编辑
     };
   },
   methods: {
@@ -372,12 +397,20 @@ export default {
     },
     // 增加门店-打开对话框
     handleShopAdd(event) {
+      this.dialogTitle = "新增门店";
+      this.isEdit = true;
       this.dissolveFocus(event);
       this.dialogVisible = true;
     },
     // 关闭对话
     handleDialogClose(done) {
-      this.isEdit = false;
+      this.canEdit = false;
+      this.setForm({
+        shopName: "",
+        longitude: "",
+        latitude: "",
+        desc: ""
+      });
       this.handleRemove(this.picture);
       done();
     },
@@ -428,10 +461,32 @@ export default {
       this.dialogImageUrl = file.url;
       this.dialogImgVisible = true;
     },
-    handleClick(row) {
+    // 查看
+    handlePreview(row) {
+      console.log(row);
+      this.dialogTitle = "查看门店信息";
+      this.canEdit = true;
+      this.isEdit = false;
+      this.dialogVisible = true;
+    },
+    handleEdit(row) {
+      this.dialogTitle = "编辑门店信息";
       console.log(row);
       this.isEdit = true;
+      this.canEdit = true;
       this.dialogVisible = true;
+    },
+    // 编辑
+    handleFormEdit() {
+      this.dialogTitle = "编辑门店信息";
+      this.isEdit = true;
+    },
+    // 设置表单信息
+    setForm({ shopName = "", longitude = "", latitude = "", desc = "" }) {
+      this.shopName = shopName;
+      this.longitude = longitude;
+      this.latitude = latitude;
+      this.desc = desc;
     }
   }
 };
@@ -456,6 +511,10 @@ export default {
     overflow: hidden;
   }
 
+  .icon {
+    cursor: pointer;
+    margin-left: 5px;
+  }
   .dialog-container {
     max-height: 400px;
     overflow: auto;
@@ -498,6 +557,7 @@ export default {
         font-size: 15px;
         min-width: 60px;
         text-align: center;
+        color: #000;
       }
     }
   }
