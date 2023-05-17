@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-06 21:43:56
+ * @LastEditTime: 2023-05-17 22:14:32
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -100,90 +100,105 @@
         />
       </span>
       <div class="dialog-container">
-        <div class="top">
-          <div class="left">
-            <div class="item">
-              <span class="label">门店名称：</span>
-              <el-input
-                v-if="isEdit"
-                v-model="shopName"
-                autocomplete="off"
-              />
-              <span v-else>{{ shopName }}</span>
-            </div>
-            <div class="item">
-              <span class="label">经度：</span>
-              <el-input
-                v-if="isEdit"
-                v-model="longitude"
-                autocomplete="off"
-              />
-              <span v-else>{{ longitude }}</span>
-            </div>
-            <div class="item">
-              <span class="label">纬度：</span>
-              <el-input
-                v-if="isEdit"
-                v-model="latitude"
-                autocomplete="off"
-              />
-              <span v-else>{{ latitude }}</span>
-            </div>
-            <div class="item">
-              <span class="label">门店描述：</span>
-              <el-input
-                v-if="isEdit"
-                v-model="desc"
-                type="textarea"
-                :rows="2"
-                placeholder="请输入内容"
-              />
-              <span v-else>{{ desc }}</span>
-            </div>
-          </div>
-          <div class="right">
-            <el-upload
-              ref="upload"
-              :class="['upload',{ cover: hasImg }]"
-              action="#"
-              list-type="picture-card"
-              :auto-upload="false"
-              :limit="1"
-              :on-change="handleUpload"
-            >
-              <i
-                slot="default"
-                class="el-icon-plus"
-              />
-              <div
-                slot="file"
-                slot-scope="{file}"
+        <el-form
+          ref="form"
+          :rules="rules"
+          :model="form"
+          label-width="80px"
+        >
+          <el-form-item
+            label="门店名称"
+            prop="name"
+          >
+            <el-input
+              v-model="form.name"
+              placeholder="请输入门店名称"
+            />
+          </el-form-item>
+          <el-form-item
+            label="地址"
+            prop="address"
+          >
+            <el-input
+              v-model="form.address"
+              placeholder="请输入门店地址"
+            />
+          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="城市"
+                prop="city"
               >
-                <img
-                  class="el-upload-list__item-thumbnail"
-                  :src="file.url"
-                  alt=""
-                >
-                <span
-                  class="el-upload-list__item-actions"
-                >
-                  <span
-                    class="el-upload-list__item-preview"
-                    @click="handlePictureCardPreview(file)"
-                  >
-                    <i class="el-icon-zoom-in" />
-                  </span>
-                  <span
-                    class="el-upload-list__item-delete"
-                    @click="handleRemove(file)"
-                  >
-                    <i class="el-icon-delete" />
-                  </span>
-                </span>
-              </div>
-            </el-upload>
-          </div>
-        </div>
+                <el-input
+                  v-model="form.city"
+                  placeholder="请输入城市"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="地区"
+                prop="region"
+              >
+                <el-input
+                  v-model="form.region"
+                  placeholder="请输入地区"
+                  style="width: 100%;"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="经度"
+                prop="latitude"
+              >
+                <el-input
+                  v-model="form.latitude"
+                  placeholder="请输入经度"
+                  type="number"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="纬度"
+                prop="longitude"
+              >
+                <el-input
+                  v-model="form.longitude"
+                  placeholder="请输入纬度"
+                  type="number"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item
+            label="图片"
+            prop="image"
+          >
+            <el-input
+              v-model="form.image"
+              type="textarea"
+              autosize
+              placeholder="请输入base64编码图片"
+            />
+          </el-form-item>
+          <el-form-item
+            label="描述"
+            prop="remark"
+          >
+            <el-input
+              v-model="form.remark"
+              type="textarea"
+              autosize
+              placeholder="请输入描述信息"
+            />
+          </el-form-item>
+        </el-form>
       </div>
       <span
         slot="footer"
@@ -198,184 +213,85 @@
         <el-button
           type="primary"
           size="medium"
-          @click="dialogVisible = false"
+          @click="handleFormConfirm"
         >
           确定
         </el-button>
       </span>
     </el-dialog>
-    <el-dialog :visible.sync="dialogImgVisible">
-      <img
-        width="100%"
-        :src="dialogImageUrl"
-        alt=""
-      >
-    </el-dialog>
   </div>
 </template>
 
 <script>
+import { getList } from "@/api";
+
 export default {
   name: "Portal",
   data() {
+    const validateLatitude = (rule, value, callback) => {
+      const lat = Number(value);
+      if (lat >= -180 && lat <= 180) {
+        callback();
+      } else {
+        callback(new Error("经度的取值范围[-180,180]"));
+      }
+    };
+    const validateLongitude = (rule, value, callback) => {
+      const log = Number(value);
+      if (log >= -85 && log <= 85) {
+        callback();
+      } else {
+        callback(new Error("纬度的取值范围[-85,85]"));
+      }
+    };
     return {
-      tableData: [
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-03",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-02",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-04",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-01",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-08",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-06",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        },
-        {
-          date: "2016-05-07",
-          name: "王小虎",
-          address: "上海市普陀区金沙江路 1518 弄"
-        }
-      ],
+      tableData: [],
       multipleSelection: [], // 表格选中项
       delLoading: false,
       dialogVisible: false, // 对话框显隐
       dialogTitle: "新增门店",
-      shopName: "", // 门店名称
-      longitude: "", // 经度
-      latitude: "", // 纬度
-      desc: "", // 门店描述
-      dialogImgVisible: false, // 图片预览对话框
       dialogImageUrl: "", // 图片预览地址
       hasImg: false, // 是否有图片
       picture: null, // 图片-文件
       canEdit: false, // 能否编辑 是否显示编辑图标
-      isEdit: true // 是否编辑
+      isEdit: true, // 是否编辑
+      form: {
+        name: "",
+        address: "",
+        city: "",
+        region: "",
+        latitude: "",
+        longitude: "",
+        image: "",
+        remark: ""
+      },
+      rules: {
+        name: [
+          { required: true, message: "请输入门店名称", trigger: "blur" }
+        ],
+        address: [
+          { required: true, message: "请输入门店地址", trigger: "blur" }
+        ],
+        city: [
+          { required: true, message: "请输入城市名称", trigger: "blur" }
+        ],
+        region: [
+          { required: true, message: "请输入地区名称", trigger: "blur" }
+        ],
+        latitude: [
+          { required: true, message: "请输入经度", trigger: "blur" },
+          { validator: validateLatitude, trigger: "blur" }
+        ],
+        longitude: [
+          { required: true, message: "请输入纬度", trigger: "blur" },
+          { validator: validateLongitude, trigger: "blur" }
+        ]
+      }
     };
+  },
+  async mounted() {
+    const res = await getList();
+    console.log(res);
   },
   methods: {
     // 表格勾选
@@ -411,7 +327,6 @@ export default {
         latitude: "",
         desc: ""
       });
-      this.handleRemove(this.picture);
       done();
     },
     // 删除门店
@@ -442,25 +357,6 @@ export default {
           });
         });
     },
-    // 上传图片
-    handleUpload(file) {
-      this.hasImg = true;
-      console.log(file);
-      this.picture = file;
-    },
-    // 移除图片
-    handleRemove(file) {
-      console.log(file);
-      const fileList = this.$refs.upload.uploadFiles;
-      const index = fileList.findIndex(fileItem => { return fileItem.uid === file.uid; });
-      fileList.splice(index, 1);
-      this.hasImg = false;
-    },
-    // 图片预览
-    handlePictureCardPreview(file) {
-      this.dialogImageUrl = file.url;
-      this.dialogImgVisible = true;
-    },
     // 查看
     handlePreview(row) {
       console.log(row);
@@ -487,6 +383,18 @@ export default {
       this.longitude = longitude;
       this.latitude = latitude;
       this.desc = desc;
+    },
+    // 提交表单
+    handleFormConfirm() {
+      // if()
+      this.$refs.form.validate((valid) => {
+        if (valid) {
+          alert("submit!");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     }
   }
 };
@@ -518,32 +426,6 @@ export default {
   .dialog-container {
     max-height: 400px;
     overflow: auto;
-    .top {
-      display: grid;
-      width: 100%;
-      grid-template-columns: 55% calc(45% - 10px);
-      grid-column-gap: 10px;
-
-      .cover {
-        ::v-deep .el-upload.el-upload--picture-card {
-          display: none;
-        }
-      }
-      .upload {
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        ::v-deep .el-upload--picture-card,
-        ::v-deep .el-upload-list__item {
-          width: 250px;
-          height: calc(100% - 10px);
-          margin-bottom: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-      }
-    }
 
     .item {
       display: flex;

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:55:19
  * @LastEditors: quling
- * @LastEditTime: 2023-05-04 21:45:39
+ * @LastEditTime: 2023-05-17 22:35:27
  * @Description: 登录
  * @FilePath: \vue-admin-template\src\views\login\index.vue
 -->
@@ -51,8 +51,13 @@
           auto-complete="on"
           @keyup.enter.native="handleLogin"
         />
-        <span class="show-pwd" @click="showPwd">
-          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+        <span
+          class="show-pwd"
+          @click="showPwd"
+        >
+          <svg-icon
+            :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'"
+          />
         </span>
       </el-form-item>
 
@@ -81,12 +86,10 @@ export default {
       }
     };
     const validatePassword = (rule, value, callback) => {
-      if (value === "passw0rd123") {
-        callback();
-      } else if (value.length === 0) {
+      if (value.length === 0) {
         callback(new Error("密码不能为空"));
       } else {
-        callback(new Error("密码错误"));
+        callback();
       }
     };
     return {
@@ -127,12 +130,16 @@ export default {
         if (valid) {
           this.loading = true;
           console.log("handleLogin", valid);
-          this.$store.dispatch("user/login", this.loginForm).then(() => {
-            this.$router.push({ path: this.redirect || "/" });
-            this.loading = false;
-          }).catch(() => {
-            this.loading = false;
-          });
+          if (this.loginForm.password !== "passw0rd123") {
+            this.$message.error("密码错误");
+          } else {
+            this.$store.dispatch("user/login", this.loginForm.username).then(() => {
+              this.$router.push({ path: this.redirect || "/" });
+              this.loading = false;
+            }).catch(() => {
+              this.loading = false;
+            });
+          }
         } else {
           console.log("账号或密码错误!");
           return false;
