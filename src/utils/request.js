@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-17 22:13:03
+ * @LastEditTime: 2023-05-18 21:18:56
  * @Description:
  * @FilePath: \vue-admin-template\src\utils\request.js
  */
@@ -14,13 +14,12 @@ import store from "@/store";
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   // withCredentials: true, // send cookies when cross-domain requests
-  timeout: 5000 // request timeout
+  timeout: 60000 * 30 // request timeout
 });
 
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    // do something before request is sent
     return config;
   },
   error => {
@@ -46,7 +45,7 @@ service.interceptors.response.use(
     const res = response.data;
 
     // if the custom code is not 20000, it is judged as an error.
-    if (res.code !== 20000) {
+    if (res.code !== 1000) {
       Message({
         message: res.message || "Error",
         type: "error",
@@ -73,11 +72,6 @@ service.interceptors.response.use(
   },
   error => {
     console.log("err" + error); // for debug
-    Message({
-      message: error.message,
-      type: "error",
-      duration: 5 * 1000
-    });
     return Promise.reject(error);
   }
 );
