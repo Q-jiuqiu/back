@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-18 23:09:04
+ * @LastEditTime: 2023-05-18 23:39:26
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -302,7 +302,7 @@ import { getList, addShop, delShop, editShop } from "@/api";
 export default {
   name: "Portal",
   data() {
-    const validateLatitude = (rule, value, callback) => {
+    const validateLongitude = (rule, value, callback) => {
       const lat = Number(value);
       if (lat >= -180 && lat <= 180) {
         callback();
@@ -310,7 +310,7 @@ export default {
         callback(new Error("经度的取值范围[-180,180]"));
       }
     };
-    const validateLongitude = (rule, value, callback) => {
+    const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
       if (log >= -85 && log <= 85) {
         callback();
@@ -526,7 +526,11 @@ export default {
             this.dialogVisible = false;
             await this.initTableData();
           } catch (error) {
-            this.$message.warning(`新增失败`);
+            if (!this.canEdit) {
+              this.$message.warning(`新增失败`);
+            } else if (this.canEdit && this.isEdit) {
+              this.$message.warning(`修改失败`);
+            }
           } finally {
             this.addBtnLoading = false;
           }
