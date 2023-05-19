@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: quling
- * @LastEditTime: 2023-05-03 22:12:45
+ * @LastEditTime: 2023-05-19 11:22:25
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -50,7 +50,6 @@ export const constantRoutes = [
     component: () => import("@/views/404"),
     hidden: true
   },
-
   {
     path: "/",
     component: Layout,
@@ -71,6 +70,7 @@ export const constantRoutes = [
 
 const createRouter = () =>
   new Router({
+    mode: "hash",
     // mode: 'history', // require service support
     scrollBehavior: () => ({ y: 0 }),
     routes: constantRoutes
