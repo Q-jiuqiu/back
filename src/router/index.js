@@ -1,8 +1,8 @@
 /*
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
- * @LastEditors: quling
- * @LastEditTime: 2023-05-19 11:22:25
+ * @LastEditors: 何元鹏
+ * @LastEditTime: 2023-06-09 20:02:16
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -60,6 +60,36 @@ export const constantRoutes = [
         name: "Portal",
         component: () => import("@/views/portal/index"),
         meta: { title: "首页", icon: "dashboard" }
+      },
+      {
+        path: "avoidPits",
+        name: "avoidPits",
+        component: () => import("@/views/avoidPits/avoidPits"),
+        meta: { title: "避坑", icon: "dashboard" }
+      },
+      {
+        path: "message",
+        name: "message",
+        component: () => import("@/views/message/message"),
+        meta: { title: "留言", icon: "dashboard" }
+      },
+      {
+        path: "dictionary",
+        name: "dictionary",
+        component: () => import("@/views/dictionary/dictionary"),
+        meta: { title: "数据字典", icon: "dashboard" }
+      },
+      {
+        path: "recommend",
+        name: "recommend",
+        component: () => import("@/views/recommend/recommend"),
+        meta: { title: "推荐", icon: "dashboard" }
+      },
+      {
+        path: "cityManagement",
+        name: "cityManagement",
+        component: () => import("@/views/cityManagement/cityManagement"),
+        meta: { title: "城市管理", icon: "dashboard" }
       }
     ]
   },

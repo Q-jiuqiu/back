@@ -1,8 +1,8 @@
 <!--
  * @Author: quling
  * @Date: 2023-04-27 22:55:19
- * @LastEditors: quling
- * @LastEditTime: 2023-05-17 22:35:27
+ * @LastEditors: 何元鹏
+ * @LastEditTime: 2023-06-06 21:09:50
  * @Description: 登录
  * @FilePath: \vue-admin-template\src\views\login\index.vue
 -->
@@ -95,7 +95,7 @@ export default {
     return {
       loginForm: {
         username: "admin",
-        password: ""
+        password: "passw0rd123"
       },
       loginRules: {
         username: [{ required: true, trigger: "blur", validator: validateUsername }],
