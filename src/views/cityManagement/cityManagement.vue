@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 14:05:40
+ * @LastEditTime: 2023-06-10 12:44:15
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -11,27 +11,19 @@
     <!-- 操作按钮 -->
     <div class="operation">
       <div class="search">
-        <div class="search-item">
-          <div class="label">名称:</div>
-          <el-input
-            v-model="name"
-            placeholder="搜索店铺名称"
-          />
-        </div>
+
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
-          />
+          <el-select v-model="city" placeholder="请选择">
+            <el-option
+              v-for="item in cityOption"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </div>
-        <div class="search-item">
-          <div class="label">区域:</div>
-          <el-input
-            v-model="region"
-            placeholder="搜索区域"
-          />
-        </div>
+
         <el-button
           type="primary"
           size="medium"
@@ -49,7 +41,7 @@
         size="medium"
         @click="handleShopAdd"
       >
-        新增门店
+        新增城市简介
       </el-button>
     </div>
     <!-- 表格 -->
@@ -63,26 +55,14 @@
         @row-click="handleRowClick"
       >
         <el-table-column
-          prop="name"
-          label="名称"
+          prop="city"
+          label="城市"
           header-align="center"
           align="left"
         />
         <el-table-column
-          prop="province"
-          label="经纬度"
-          header-align="center"
-          align="left"
-        >
-          <template slot-scope="scope">
-            (
-            {{ scope&&scope.row.longitude }} ,
-            {{ scope&&scope.row.latitude }})
-          </template>
-        </el-table-column>
-        <el-table-column
-          prop="addr"
-          label="地址"
+          prop="remark"
+          label="简介"
           header-align="center"
           align="left"
         />
@@ -115,11 +95,10 @@
         </el-table-column>
       </el-table>
     </div>
-    <!-- 新增门店 -->
+    <!-- 新增城市推荐 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
-      width="70%"
     >
       <span
         slot="title"
@@ -140,121 +119,21 @@
           label-width="80px"
         >
           <el-form-item
-            label="门店名称"
-            prop="name"
+            label="城市"
+            prop="city"
           >
-            <el-input
-              v-model="form.name"
-              placeholder="请输入门店名称"
-              :disabled="!isEdit"
-            />
+            <el-select v-model="form.city" placeholder="请选择">
+              <el-option
+                v-for="item in cityOption"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
-          <el-form-item
-            label="地址"
-            prop="addr"
-          >
-            <el-input
-              v-model="form.addr"
-              placeholder="请输入门店地址"
-              :disabled="!isEdit"
-            />
-          </el-form-item>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item
-                label="城市"
-                prop="city"
-              >
-                <el-input
-                  v-model="form.city"
-                  placeholder="请输入城市"
-                  style="width: 100%;"
-                  :disabled="!isEdit"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item
-                label="地区"
-                prop="region"
-              >
-                <el-input
-                  v-model="form.region"
-                  placeholder="请输入地区"
-                  style="width: 100%;"
-                  :disabled="!isEdit"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="12">
-              <el-form-item
-                label="经度"
-                prop="longitude"
-              >
-                <el-input
-                  v-model="form.longitude"
-                  placeholder="请输入经度"
-                  type="number"
-                  :disabled="!isEdit"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item
-                label="纬度"
-                prop="latitude"
-              >
-                <el-input
-                  v-model="form.latitude"
-                  placeholder="请输入纬度"
-                  type="number"
-                  :disabled="!isEdit"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row>
-            <el-col :span="8">
-              <el-form-item
-                label=" 一级分类"
-              >
-                <el-select v-model="form.type" clearable placeholder="请选择" @change="handelSecondType">
-                  <el-option
-                    v-for="item in options1"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item
-                label="二级分类"
-              >
-                <el-select v-model="form.secondType" clearable placeholder="请选择">
-                  <el-option
-                    v-for="item in options2"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item
-                label="热度"
-              >
-                <el-input-number v-model="form.heat" :min="1" :max="5" label="热度" />
-              </el-form-item>
-            </el-col>
-          </el-row>
+
           <el-form-item
             label="图片"
-            prop="image"
           >
             <el-upload
               v-if="!imageBase64"
@@ -264,9 +143,9 @@
               :before-remove="beforeRemove"
               accept=".jpg,.png"
               multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
+              :limit="5"
+              :file-list="form.images"
+              list-type="picture"
               :auto-upload="false"
               :on-change="handleFileChange"
             >
@@ -281,22 +160,23 @@
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
             <div v-else>
+              <div v-for="(item,index) in form.images" :key="index">
+                <img
+                  class="image"
+                  :src="item.item"
+                  alt="城市照片"
+                >
+                <i
+                  v-if="isEdit"
+                  class="el-icon-refresh"
+                  title="修改图片"
+                  @click="handleChangeImage"
+                /></div>
 
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="门店照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
             </div>
           </el-form-item>
           <el-form-item
-            label="描述"
+            label="简介"
             prop="remark"
           >
             <el-input
@@ -333,143 +213,84 @@
 </template>
 
 <script>
-import { getList, addShop, delShop, editShop, getDictFind } from "@/api";
+import { getTypeCityFind, postCityDict, getCityFind, deleteCityDict, postCityEdit } from "@/api";
 
 export default {
-  name: "Portal",
+  name: "Recommend",
   data() {
-    const validateLatitude = (rule, value, callback) => {
-      const log = Number(value);
-      if (log >= -85 && log <= 85) {
-        callback();
-      } else {
-        callback(new Error("纬度的取值范围[-85,85]"));
-      }
-    };
-    const validateLongitude = (rule, value, callback) => {
-      const lat = Number(value);
-      if (lat >= -180 && lat <= 180) {
-        callback();
-      } else {
-        callback(new Error("经度的取值范围[-180,180]"));
-      }
-    };
     return {
       tableData: [],
       delLoading: false,
       dialogVisible: false, // 对话框显隐
-      dialogTitle: "新增门店",
+      dialogTitle: "新增城市",
       dialogImageUrl: "", // 图片预览地址
       hasImg: false, // 是否有图片
       picture: null, // 图片-文件
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
       form: {
-        name: "",
-        addr: "",
-        city: "",
-        region: "",
-        latitude: "",
-        longitude: "",
-        image: [],
+        images: [],
         remark: "",
-        type: "美食",
-        secondType: "",
-        heat: 3
+        city: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
-        name: [
-          { required: true, message: "请输入门店名称", trigger: "blur" }
-        ],
-        addr: [
-          { required: true, message: "请输入门店地址", trigger: "blur" }
+        remark: [
+          { required: true, message: "请输入描述", trigger: "blur" }
         ],
         city: [
-          { required: true, message: "请输入城市名称", trigger: "blur" }
-        ],
-        region: [
-          { required: true, message: "请输入地区名称", trigger: "blur" }
-        ],
-        longitude: [
-          { required: true, message: "请输入经度", trigger: "blur" },
-          { validator: validateLatitude, trigger: "blur" }
-        ],
-        latitude: [
-          { required: true, message: "请输入纬度", trigger: "blur" },
-          { validator: validateLongitude, trigger: "blur" }
-        ],
-        image: [
-          { required: true, message: "请上传图片", trigger: "blur" }
+          { required: true, message: "请输入城市", trigger: "blur" }
         ]
       },
-      addBtnLoading: false, // 添加门店loading
+      addBtnLoading: false, // 添加城市loading
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
-      name: "",
       city: "",
-      region: "",
-      options1: [
-        {
-          value: "美食",
-          label: "美食"
-        },
-        {
-          value: "风景",
-          label: "风景"
-        }
-      ],
-      options2: []
+      cityOption: []
     };
   },
   mounted() {
-    this.initTableData();
-    this.handelSecondType();
+    this.getQueryCityData();
   },
   methods: {
-    // 获取二级分类
-    async handelSecondType() {
-      this.options2 = [];
-      const { data: {
-        content
-      }} = await getDictFind({
-        pageIndex: 1,
-        pageSize: 1000
-      });
-      content.forEach(item => {
-        this.options2.push({
-          value: item.name,
-          label: item.name
+    // 查询城市信息
+    async getQueryCityData() {
+      const { data } = await getTypeCityFind();
+      this.city = data[0];
+      data.forEach(item => {
+        this.cityOption.push({
+          value: item,
+          label: item
         });
       });
+      this.initTableData();
     },
+
+    // 查询描述列表
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getList(
-          {
-            name: this.name,
-            region: this.region,
-            city: this.city
-          },
-          { pageIndex: 1,
-            pageSize: 10
-          }
+        const { data } = await getCityFind(
+          this.city
         );
-        console.log(data);
-        this.tableData = data.content;
+        if (data === null) {
+          this.tableData = [];
+        } else {
+          this.tableData = [data];
+        }
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
+
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
       this.city = "";
-      this.region = "";
+      this.type = "";
       this.initTableData();
     },
     // 点击表格行
@@ -485,11 +306,12 @@ export default {
       }
       target.blur();
     },
-    // 增加门店-打开对话框
+    // 增加城市-打开对话框
     handleShopAdd(event) {
-      this.dialogTitle = "新增门店";
+      this.dialogTitle = "新增城市";
       this.isEdit = true;
       this.dissolveFocus(event);
+      this.form.images = [];
       this.dialogVisible = true;
     },
     // 关闭对话
@@ -502,17 +324,16 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除门店
+    // 删除城市
     handleShopDel(item) {
-      this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
+      this.$confirm("此操作将永久删除选中城市, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
       })
         .then(async() => {
-          console.log(item);
           try {
-            await delShop(item.id);
+            await deleteCityDict(item.id);
             this.$message.success("删除成功!");
             this.initTableData();
           } catch (error) {
@@ -528,75 +349,80 @@ export default {
     },
     // 查看
     handlePreview(row) {
-      this.dialogTitle = "查看门店信息";
+      this.dialogTitle = "查看城市信息";
       this.canEdit = true;
       this.isEdit = false;
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
+        if (key.includes("image")) {
+          if (row[key]) {
+            this.form.images.push({ url: row[key] });
+          }
         }
       });
+      this.form.city = row.city;
+      this.form.id = row.id;
+      this.form.remark = row.remark;
     },
+    // 编辑
     handleEdit(row) {
-      this.dialogTitle = "编辑门店信息";
+      console.log(row);
+      this.dialogTitle = "编辑城市信息";
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
+        if (key.includes("image")) {
+          if (row[key]) {
+            console.log(this.form.images);
+            this.form.images.push({ url: row[key] });
+          }
         }
       });
+      this.form.city = row.city;
+      this.form.id = row.id;
+      this.form.remark = row.remark;
     },
     // 编辑
     handleFormEdit() {
-      this.dialogTitle = "编辑门店信息";
+      this.dialogTitle = "编辑城市信息";
       this.isEdit = true;
     },
     // 重置表单
     resetForm() {
-      for (const key in this.form) {
-        if (Object.hasOwnProperty.call(this.form, key)) {
-          this.form[key] = "";
-        }
-      }
-      this.imageBase64 = "";
+      this.form = {
+        images: [],
+        remark: "",
+        city: ""
+      };
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.canEdit, this.isEdit);
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;
         return;
       }
+      this.form.images.forEach((item, index) => {
+        this.form[`image${index + 1}`] = item.url;
+      });
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
             this.addBtnLoading = true;
             const params = {
-              ...this.form,
-              image: this.imageBase64
+              ...this.form
             };
             console.log(params);
-
-            // 新增门店
+            // 新增城市
             if (!this.canEdit) {
-              await addShop(params);
+              await postCityDict(params);
+              this.resetForm();
             } else if (this.canEdit && this.isEdit) {
-              console.log(111);
-              await editShop(params);
+              await postCityEdit(params);
             }
-            this.resetForm();
             this.dialogVisible = false;
             await this.initTableData();
           } catch (error) {
@@ -615,8 +441,6 @@ export default {
     },
     // 文件选中
     handleFileChange(file) {
-      console.log(file);
-      this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
       const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
@@ -627,21 +451,21 @@ export default {
       // 创建文件读取实例
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
+      fileReader.onload = (e, index) => {
         this.$refs.form.validate();
+        this.form.images.push({
+          name: `image${index}`,
+          url: e.target.result
+        });
       };
+      console.log(this.form.images);
     },
 
     handleRemove(file, fileList) {
-      console.log(file, fileList);
-      this.form.image = [];
+      this.form.images = fileList;
     },
-    handleExceed() {
-      this.$message.warning(`当前限制选择 1 个文件`);
-    },
-    beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
+    beforeRemove() {
+      return this.$confirm(`确定移除？`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
@@ -649,7 +473,7 @@ export default {
     // 修改图片
     handleChangeImage() {
       this.imageBase64 = "";
-      this.form.image = [];
+      this.form.images = [];
     }
   }
 };
