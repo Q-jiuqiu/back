@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 13:54:08
+ * @LastEditTime: 2023-06-10 14:05:40
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -191,10 +191,10 @@
             <el-col :span="12">
               <el-form-item
                 label="经度"
-                prop="latitude"
+                prop="longitude"
               >
                 <el-input
-                  v-model="form.latitude"
+                  v-model="form.longitude"
                   placeholder="请输入经度"
                   type="number"
                   :disabled="!isEdit"
@@ -204,10 +204,10 @@
             <el-col :span="12">
               <el-form-item
                 label="纬度"
-                prop="longitude"
+                prop="latitude"
               >
                 <el-input
-                  v-model="form.longitude"
+                  v-model="form.latitude"
                   placeholder="请输入纬度"
                   type="number"
                   :disabled="!isEdit"
