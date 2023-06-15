@@ -45,12 +45,14 @@
           label="城市"
           header-align="center"
           align="left"
+          width="300"
         />
         <el-table-column
           prop="leaveWord"
           label="描述"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"

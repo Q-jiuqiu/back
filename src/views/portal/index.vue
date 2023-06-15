@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 13:54:08
+ * @LastEditTime: 2023-06-15 20:59:41
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -66,10 +66,12 @@
           prop="name"
           label="名称"
           header-align="center"
+          :show-overflow-tooltip="true"
           align="left"
         />
         <el-table-column
           prop="province"
+          width="180"
           label="经纬度"
           header-align="center"
           align="left"
@@ -83,9 +85,18 @@
         <el-table-column
           prop="addr"
           label="地址"
+          :show-overflow-tooltip="true"
           header-align="center"
           align="left"
         />
+        <el-table-column
+          prop="remark"
+          label="描述"
+          :show-overflow-tooltip="true"
+          header-align="center"
+          align="left"
+        />
+
         <el-table-column
           label="操作"
           width="150"
@@ -191,10 +202,10 @@
             <el-col :span="12">
               <el-form-item
                 label="经度"
-                prop="latitude"
+                prop="longitude"
               >
                 <el-input
-                  v-model="form.latitude"
+                  v-model="form.longitude"
                   placeholder="请输入经度"
                   type="number"
                   :disabled="!isEdit"
@@ -204,10 +215,10 @@
             <el-col :span="12">
               <el-form-item
                 label="纬度"
-                prop="longitude"
+                prop="latitude"
               >
                 <el-input
-                  v-model="form.longitude"
+                  v-model="form.latitude"
                   placeholder="请输入纬度"
                   type="number"
                   :disabled="!isEdit"
@@ -218,21 +229,7 @@
           <el-row>
             <el-col :span="8">
               <el-form-item
-                label=" 一级分类"
-              >
-                <el-select v-model="form.type" clearable placeholder="请选择" @change="handelSecondType">
-                  <el-option
-                    v-for="item in options1"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item
-                label="二级分类"
+                label="分类"
               >
                 <el-select v-model="form.secondType" clearable placeholder="请选择">
                   <el-option
@@ -248,7 +245,7 @@
               <el-form-item
                 label="热度"
               >
-                <el-input-number v-model="form.heat" :min="1" :max="5" label="热度" />
+                <el-input-number v-model="form.heat" :min="1" :max="100" label="热度" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -301,8 +298,8 @@
           >
             <el-input
               v-model="form.remark"
+              :autosize="{ minRows: 4, maxRows: 8}"
               type="textarea"
-              autosize
               placeholder="请输入描述信息"
               :disabled="!isEdit"
             />
@@ -410,16 +407,6 @@ export default {
       name: "",
       city: "",
       region: "",
-      options1: [
-        {
-          value: "美食",
-          label: "美食"
-        },
-        {
-          value: "风景",
-          label: "风景"
-        }
-      ],
       options2: []
     };
   },
@@ -436,7 +423,7 @@ export default {
       }} = await getDictFind({
         pageIndex: 1,
         pageSize: 1000
-      });
+      }, { type: "美食" });
       content.forEach(item => {
         this.options2.push({
           value: item.name,
@@ -450,14 +437,15 @@ export default {
         const { data } = await getList(
           {
             name: this.name,
+            type: "美食",
             region: this.region,
             city: this.city
+
           },
           { pageIndex: 1,
             pageSize: 10
           }
         );
-        console.log(data);
         this.tableData = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");

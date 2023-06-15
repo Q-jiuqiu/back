@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-09 21:47:29
+ * @LastEditTime: 2023-06-15 20:25:16
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -79,9 +79,9 @@ export function deleteEscapePit(id) {
   });
 }
 // 获取数据字典数据列表
-export function getDictFind(page) {
+export function getDictFind(page, params) {
   return request({
-    url: `/pro/rest/dbs/find/dict/${page.pageIndex}/${page.pageSize}`,
+    url: `/pro/rest/dbs/find/dict/${page.pageIndex}/${page.pageSize}?type=${params.type}`,
     method: "get"
   });
 }

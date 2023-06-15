@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 21:17:34
+ * @LastEditTime: 2023-06-15 20:50:38
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -11,46 +11,33 @@
     <!-- 操作按钮 -->
     <div class="operation">
       <div class="search">
-
-        <div class="search-item">
-          <div class="label">城市:</div>
-          <el-select v-model="city" placeholder="请选择" @change="handelCityChange">
-            <el-option
-              v-for="item in cityOption"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </div>
-        <div class="search-item">
-          <div class="label">类型:</div>
-          <el-select v-model="type" placeholder="请选择" @change="handelTypeChange">
-            <el-option
-              v-for="item in options"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </div>
         <div class="search-item">
           <div class="label">名称:</div>
-          <el-select v-model="form.name" placeholder="请选择" @change="handelNameChange">
-            <el-option
-              v-for="item in nameOptions"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
+          <el-input
+            v-model="name"
+            placeholder="搜索店铺名称"
+          />
+        </div>
+        <div class="search-item">
+          <div class="label">城市:</div>
+          <el-input
+            v-model="city"
+            placeholder="搜索城市"
+          />
+        </div>
+        <div class="search-item">
+          <div class="label">区域:</div>
+          <el-input
+            v-model="region"
+            placeholder="搜索区域"
+          />
         </div>
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
           @click="initTableData"
-        >筛选</el-button>
+        >搜索</el-button>
         <el-button
           size="medium"
           icon="el-icon-search"
@@ -62,7 +49,7 @@
         size="medium"
         @click="handleShopAdd"
       >
-        新增门店推荐
+        新增门店
       </el-button>
     </div>
     <!-- 表格 -->
@@ -73,24 +60,43 @@
         :data="tableData"
         border
         height="100%"
-        empty-text="请先选择筛选条件"
         @row-click="handleRowClick"
       >
-
         <el-table-column
-          prop="foodName"
-          label="推荐菜单"
+          prop="name"
+          label="名称"
           header-align="center"
-          align="left"
-        />
-
-        <el-table-column
-          prop="describe"
-          label="简介"
-          header-align="center"
-          align="left"
           :show-overflow-tooltip="true"
+          align="left"
         />
+        <el-table-column
+          prop="province"
+          width="180"
+          label="经纬度"
+          header-align="center"
+          align="left"
+        >
+          <template slot-scope="scope">
+            (
+            {{ scope&&scope.row.longitude }} ,
+            {{ scope&&scope.row.latitude }})
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="addr"
+          label="地址"
+          :show-overflow-tooltip="true"
+          header-align="center"
+          align="left"
+        />
+        <el-table-column
+          prop="remark"
+          label="描述"
+          :show-overflow-tooltip="true"
+          header-align="center"
+          align="left"
+        />
+
         <el-table-column
           label="操作"
           width="150"
@@ -120,10 +126,11 @@
         </el-table-column>
       </el-table>
     </div>
-    <!-- 新增门店推荐 -->
+    <!-- 新增门店 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
+      width="70%"
     >
       <span
         slot="title"
@@ -144,16 +151,118 @@
           label-width="80px"
         >
           <el-form-item
-            label="推荐名"
-            prop="foodName"
+            label="门店名称"
+            prop="name"
           >
             <el-input
-              v-model="form.foodName"
-              placeholder="请输入推荐名"
+              v-model="form.name"
+              placeholder="请输入门店名称"
               :disabled="!isEdit"
             />
           </el-form-item>
-
+          <el-form-item
+            label="地址"
+            prop="addr"
+          >
+            <el-input
+              v-model="form.addr"
+              placeholder="请输入门店地址"
+              :disabled="!isEdit"
+            />
+          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="城市"
+                prop="city"
+              >
+                <el-input
+                  v-model="form.city"
+                  placeholder="请输入城市"
+                  style="width: 100%;"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="地区"
+                prop="region"
+              >
+                <el-input
+                  v-model="form.region"
+                  placeholder="请输入地区"
+                  style="width: 100%;"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="经度"
+                prop="longitude"
+              >
+                <el-input
+                  v-model="form.longitude"
+                  placeholder="请输入经度"
+                  type="number"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="纬度"
+                prop="latitude"
+              >
+                <el-input
+                  v-model="form.latitude"
+                  placeholder="请输入纬度"
+                  type="number"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="8">
+              <el-form-item
+                label=" 一级分类"
+              >
+                <el-select v-model="form.type" clearable placeholder="请选择" @change="handelSecondType">
+                  <el-option
+                    v-for="item in options1"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item
+                label="二级分类"
+              >
+                <el-select v-model="form.secondType" clearable placeholder="请选择">
+                  <el-option
+                    v-for="item in options2"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item
+                label="热度"
+              >
+                <el-input-number v-model="form.heat" :min="1" :max="5" label="热度" />
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-form-item
             label="图片"
             prop="image"
@@ -198,13 +307,13 @@
             </div>
           </el-form-item>
           <el-form-item
-            label="简介"
-            prop="describe"
+            label="描述"
+            prop="remark"
           >
             <el-input
-              v-model="form.describe"
+              v-model="form.remark"
               type="textarea"
-              :autosize="{ minRows: 4, maxRows: 8}"
+              autosize
               placeholder="请输入描述信息"
               :disabled="!isEdit"
             />
@@ -235,11 +344,27 @@
 </template>
 
 <script>
-import { postRecommendAdd, deleteRecommend, postRecommendEdit, getRecommendFind, getTypeCityFind, getList } from "@/api";
+import { getList, addShop, delShop, editShop, getDictFind } from "@/api";
 
 export default {
-  name: "Recommend",
+  name: "Portal",
   data() {
+    const validateLatitude = (rule, value, callback) => {
+      const log = Number(value);
+      if (log >= -85 && log <= 85) {
+        callback();
+      } else {
+        callback(new Error("纬度的取值范围[-85,85]"));
+      }
+    };
+    const validateLongitude = (rule, value, callback) => {
+      const lat = Number(value);
+      if (lat >= -180 && lat <= 180) {
+        callback();
+      } else {
+        callback(new Error("经度的取值范围[-180,180]"));
+      }
+    };
     return {
       tableData: [],
       delLoading: false,
@@ -251,26 +376,43 @@ export default {
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
       form: {
-        foodName: "",
-        image: [],
-        describe: "",
-        foodId: "",
         name: "",
+        addr: "",
         city: "",
-        type: ""
+        region: "",
+        latitude: "",
+        longitude: "",
+        image: [],
+        remark: "",
+        type: "美食",
+        secondType: "",
+        heat: 3
       },
       imageBase64: "", // 图片Base64编码
       rules: {
-        foodName: [
-          { required: true, message: "请输入推荐名称", trigger: "blur" }
+        name: [
+          { required: true, message: "请输入门店名称", trigger: "blur" }
         ],
-        describe: [
-          { required: true, message: "请输入描述", trigger: "blur" }
+        addr: [
+          { required: true, message: "请输入门店地址", trigger: "blur" }
+        ],
+        city: [
+          { required: true, message: "请输入城市名称", trigger: "blur" }
+        ],
+        region: [
+          { required: true, message: "请输入地区名称", trigger: "blur" }
+        ],
+        longitude: [
+          { required: true, message: "请输入经度", trigger: "blur" },
+          { validator: validateLatitude, trigger: "blur" }
+        ],
+        latitude: [
+          { required: true, message: "请输入纬度", trigger: "blur" },
+          { validator: validateLongitude, trigger: "blur" }
         ],
         image: [
           { required: true, message: "请上传图片", trigger: "blur" }
         ]
-
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
@@ -278,8 +420,8 @@ export default {
       // 搜索关键字
       name: "",
       city: "",
-      type: "美食",
-      options: [
+      region: "",
+      options1: [
         {
           value: "美食",
           label: "美食"
@@ -289,77 +431,57 @@ export default {
           label: "风景"
         }
       ],
-      cityOption: [],
-      nameOptions: []
+      options2: []
     };
   },
   mounted() {
-    /*  this.initTableData(); */
-    this.getQueryCityData();
+    this.initTableData();
+    this.handelSecondType();
   },
   methods: {
-    // 查询城市信息
-    async getQueryCityData() {
-      const { data } = await getTypeCityFind();
-      this.city = data[0];
-      data.forEach(item => {
-        this.cityOption.push({
-          value: item,
-          label: item
+    // 获取二级分类
+    async handelSecondType() {
+      this.options2 = [];
+      const { data: {
+        content
+      }} = await getDictFind({
+        pageIndex: 1,
+        pageSize: 1000
+      }, { type: "景点" });
+      content.forEach(item => {
+        this.options2.push({
+          value: item.name,
+          label: item.name
         });
       });
-      this.getStoreIdData(data[0], this.type);
     },
-    handelTypeChange(v) {
-      console.log(v);
-      this.type = v;
-      this.form.name = "";
-      this.getStoreIdData(this.city, v);
-    },
-    handelCityChange(v) {
-      console.log(v);
-      this.city = v;
-      this.form.name = "";
-      this.getStoreIdData(v, this.type);
-    },
-    async getStoreIdData(city, type) {
-      const { data } = await getList(
-        {
-          type: type,
-          city: city
-        },
-        { pageIndex: 1,
-          pageSize: 100
-        }
-      );
-      this.nameOptions = data.content;
-    },
-    handelNameChange(value) {
-      console.log(value);
-      this.form.name = value;
-      this.initTableData();
-    },
-    // 查询描述列表
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getRecommendFind(
-          this.form.name
+        const { data } = await getList(
+          {
+            name: this.name,
+            region: this.region,
+            city: this.city,
+            type: "景点"
+          },
+          { pageIndex: 1,
+            pageSize: 10
+          }
         );
         console.log(data);
-        this.tableData = data;
+        this.tableData = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
       this.city = "";
-      this.type = "";
+      this.region = "";
       this.initTableData();
     },
     // 点击表格行
@@ -402,7 +524,7 @@ export default {
         .then(async() => {
           console.log(item);
           try {
-            await deleteRecommend(item.id);
+            await delShop(item.id);
             this.$message.success("删除成功!");
             this.initTableData();
           } catch (error) {
@@ -475,16 +597,16 @@ export default {
             this.addBtnLoading = true;
             const params = {
               ...this.form,
-              image: this.imageBase64,
-              foodId: this.form.name
+              image: this.imageBase64
             };
             console.log(params);
+
             // 新增门店
             if (!this.canEdit) {
-              await postRecommendAdd([params]);
+              await addShop(params);
             } else if (this.canEdit && this.isEdit) {
               console.log(111);
-              await postRecommendEdit(params);
+              await editShop(params);
             }
             this.resetForm();
             this.dialogVisible = false;

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-09 20:02:16
+ * @LastEditTime: 2023-06-15 21:08:00
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -59,37 +59,43 @@ export const constantRoutes = [
         path: "portal",
         name: "Portal",
         component: () => import("@/views/portal/index"),
-        meta: { title: "首页", icon: "dashboard" }
+        meta: { title: "门店", icon: "dashboard" }
       },
       {
-        path: "avoidPits",
-        name: "avoidPits",
-        component: () => import("@/views/avoidPits/avoidPits"),
-        meta: { title: "避坑", icon: "dashboard" }
-      },
-      {
-        path: "message",
-        name: "message",
-        component: () => import("@/views/message/message"),
-        meta: { title: "留言", icon: "dashboard" }
-      },
-      {
-        path: "dictionary",
-        name: "dictionary",
-        component: () => import("@/views/dictionary/dictionary"),
-        meta: { title: "数据字典", icon: "dashboard" }
+        path: "scape",
+        name: "scape",
+        component: () => import("@/views/scape/scape"),
+        meta: { title: "景点", icon: "el-icon-s-order" }
       },
       {
         path: "recommend",
         name: "recommend",
         component: () => import("@/views/recommend/recommend"),
-        meta: { title: "推荐", icon: "dashboard" }
+        meta: { title: "推荐", icon: "el-icon-s-grid" }
+      },
+      {
+        path: "avoidPits",
+        name: "avoidPits",
+        component: () => import("@/views/avoidPits/avoidPits"),
+        meta: { title: "避坑", icon: "el-icon-s-opportunity" }
+      },
+      {
+        path: "dictionary",
+        name: "dictionary",
+        component: () => import("@/views/dictionary/dictionary"),
+        meta: { title: "分类", icon: "el-icon-s-finance" }
       },
       {
         path: "cityManagement",
         name: "cityManagement",
         component: () => import("@/views/cityManagement/cityManagement"),
-        meta: { title: "城市管理", icon: "dashboard" }
+        meta: { title: "城市", icon: "el-icon-s-shop" }
+      },
+      {
+        path: "message",
+        name: "message",
+        component: () => import("@/views/message/message"),
+        meta: { title: "留言", icon: "el-icon-s-cooperation" }
       }
     ]
   },

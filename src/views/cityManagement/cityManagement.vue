@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 12:44:15
+ * @LastEditTime: 2023-06-15 21:29:19
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -59,12 +59,14 @@
           label="城市"
           header-align="center"
           align="left"
+          width="200"
         />
         <el-table-column
           prop="remark"
           label="简介"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"
@@ -182,7 +184,7 @@
             <el-input
               v-model="form.remark"
               type="textarea"
-              autosize
+              :autosize="{ minRows: 4, maxRows: 8}"
               placeholder="请输入描述信息"
               :disabled="!isEdit"
             />

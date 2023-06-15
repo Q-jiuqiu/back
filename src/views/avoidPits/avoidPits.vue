@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-07 20:45:58
+ * @LastEditTime: 2023-06-15 21:28:28
 -->
 <!--
  * @Author: quling
@@ -59,7 +59,15 @@
         <el-table-column
           prop="city"
           label="城市"
+          width="300"
           header-align="center"
+          align="left"
+        />
+        <el-table-column
+          prop="type"
+          label="类型"
+          header-align="center"
+          width="100"
           align="left"
         />
         <el-table-column
@@ -67,6 +75,7 @@
           label="描述"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"
@@ -158,7 +167,7 @@
               <el-input
                 v-model="form.leaveWord"
                 type="textarea"
-                autosize
+                :autosize="{ minRows: 4, maxRows: 8}"
                 placeholder="请输入描述信息"
               />
             </el-form-item>

@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 13:48:04
+ * @LastEditTime: 2023-06-15 21:26:57
 -->
 <!--
  * @Author: quling
@@ -59,12 +59,14 @@
         <el-table-column
           prop="type"
           label="大类"
+          width="150"
           header-align="center"
           align="left"
         />
         <el-table-column
           prop="name"
           label="小类"
+          width="300"
           header-align="center"
           align="left"
         />
@@ -73,6 +75,7 @@
           label="描述"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"
@@ -205,7 +208,7 @@
               <el-input
                 v-model="form.remark"
                 type="textarea"
-                autosize
+                :autosize="{ minRows: 4, maxRows: 8}"
                 placeholder="请输入描述信息"
               />
             </el-form-item>
