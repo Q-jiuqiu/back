@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-26 21:30:03
+ * @LastEditTime: 2023-06-27 20:54:59
 -->
 <!--
  * @Author: quling
@@ -316,7 +316,8 @@ export default {
             pageSize: this.pageSize
           },
           {
-            type: "美食"
+            type: "美食",
+            parentName: "美食", level: 2
           }
         );
         this.tableDataOne = data.content;

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-26 21:50:27
+ * @LastEditTime: 2023-06-27 20:49:54
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -64,7 +64,15 @@
       >
         <el-table-column
           prop="secondType"
-          label="分类"
+          label="大类"
+          width="100"
+          header-align="center"
+          :show-overflow-tooltip="true"
+          align="center"
+        />
+        <el-table-column
+          prop="threeType"
+          label=" 小类"
           width="100"
           header-align="center"
           :show-overflow-tooltip="true"
@@ -238,11 +246,25 @@
           <el-row>
             <el-col :span="8">
               <el-form-item
-                label="分类"
+                label="大类"
               >
-                <el-select v-model="form.secondType" clearable placeholder="请选择">
+                <el-select v-model="form.secondType" clearable placeholder="请选择" @change="handelSecondTypeChange">
                   <el-option
                     v-for="item in options2"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item
+                label="小类"
+              >
+                <el-select v-model="form.threeType" clearable placeholder="请选择">
+                  <el-option
+                    v-for="item in options3"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -416,7 +438,8 @@ export default {
       name: "",
       city: "",
       region: "",
-      options2: []
+      options2: [],
+      options3: []
     };
   },
   mounted() {
@@ -433,13 +456,35 @@ export default {
       };
       const param = {
         type: "美食",
-        level: 3
+        level: 2
       };
       const { data: {
         content
       }} = await getDictFind(page, param);
       content.forEach(item => {
         this.options2.push({
+          value: item.name,
+          label: item.name
+        });
+      });
+    },
+    async handelSecondTypeChange(value) {
+      this.options3 = [];
+      console.log(value);
+      const page = {
+        pageIndex: 1,
+        pageSize: 1000
+      };
+      const param = {
+        type: "美食",
+        parentName: value,
+        level: 3
+      };
+      const { data: {
+        content
+      }} = await getDictFind(page, param);
+      content.forEach(item => {
+        this.options3.push({
           value: item.name,
           label: item.name
         });

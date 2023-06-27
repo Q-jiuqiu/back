@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 21:17:34
+ * @LastEditTime: 2023-06-27 21:02:54
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -332,7 +332,9 @@ export default {
           pageSize: 100
         }
       );
+      this.form.name = data.content[0].id;
       this.nameOptions = data.content;
+      this.initTableData();
     },
     handelNameChange(value) {
       console.log(value);
@@ -340,7 +342,7 @@ export default {
       this.initTableData();
     },
     // 查询描述列表
-    async initTableData() {
+    async initTableData(id = this.form.name) {
       try {
         this.tableLoading = true;
         const { data } = await getRecommendFind(
@@ -486,9 +488,10 @@ export default {
               console.log(111);
               await postRecommendEdit(params);
             }
+
+            await this.initTableData(this.form.name);
             this.resetForm();
             this.dialogVisible = false;
-            await this.initTableData();
           } catch (error) {
             if (!this.canEdit) {
               this.$message.warning(`新增失败`);
