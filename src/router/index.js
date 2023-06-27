@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 21:08:00
+ * @LastEditTime: 2023-06-19 21:01:52
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -59,13 +59,19 @@ export const constantRoutes = [
         path: "portal",
         name: "Portal",
         component: () => import("@/views/portal/index"),
-        meta: { title: "门店", icon: "dashboard" }
+        meta: { title: "美食", icon: "dashboard" }
       },
       {
         path: "scape",
         name: "scape",
         component: () => import("@/views/scape/scape"),
         meta: { title: "景点", icon: "el-icon-s-order" }
+      },
+      {
+        path: "comment",
+        name: "comment",
+        component: () => import("@/views/comment/comment"),
+        meta: { title: "评价", icon: "dashboard" }
       },
       {
         path: "recommend",
@@ -84,6 +90,12 @@ export const constantRoutes = [
         name: "dictionary",
         component: () => import("@/views/dictionary/dictionary"),
         meta: { title: "分类", icon: "el-icon-s-finance" }
+      },
+      {
+        path: "twoDictionary",
+        name: "twoDictionary",
+        component: () => import("@/views/dictionary/twoDictionary"),
+        meta: { title: "二级分类", icon: "el-icon-s-finance" }
       },
       {
         path: "cityManagement",

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 21:29:19
+ * @LastEditTime: 2023-06-18 22:03:42
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -14,14 +14,10 @@
 
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-select v-model="city" placeholder="请选择">
-            <el-option
-              v-for="item in cityOption"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <el-input
+            v-model="city"
+            placeholder="搜索城市"
+          />
         </div>
 
         <el-button
@@ -124,14 +120,10 @@
             label="城市"
             prop="city"
           >
-            <el-select v-model="form.city" placeholder="请选择">
-              <el-option
-                v-for="item in cityOption"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
+            <el-input
+              v-model="form.city"
+              placeholder="请输入城市"
+            />
           </el-form-item>
 
           <el-form-item
@@ -215,7 +207,7 @@
 </template>
 
 <script>
-import { getTypeCityFind, postCityDict, getCityFind, deleteCityDict, postCityEdit } from "@/api";
+import { postCityDict, getCityFind, deleteCityDict, postCityEdit } from "@/api";
 
 export default {
   name: "Recommend",
@@ -248,26 +240,14 @@ export default {
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
-      city: "",
+      city: "成都市",
       cityOption: []
     };
   },
   mounted() {
-    this.getQueryCityData();
+    this.initTableData();
   },
   methods: {
-    // 查询城市信息
-    async getQueryCityData() {
-      const { data } = await getTypeCityFind();
-      this.city = data[0];
-      data.forEach(item => {
-        this.cityOption.push({
-          value: item,
-          label: item
-        });
-      });
-      this.initTableData();
-    },
 
     // 查询描述列表
     async initTableData() {

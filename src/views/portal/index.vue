@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 20:59:41
+ * @LastEditTime: 2023-06-26 21:50:27
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -63,18 +63,27 @@
         @row-click="handleRowClick"
       >
         <el-table-column
+          prop="secondType"
+          label="分类"
+          width="100"
+          header-align="center"
+          :show-overflow-tooltip="true"
+          align="center"
+        />
+
+        <el-table-column
           prop="name"
           label="名称"
           header-align="center"
           :show-overflow-tooltip="true"
-          align="left"
+          align="center"
         />
         <el-table-column
           prop="province"
           width="180"
           label="经纬度"
           header-align="center"
-          align="left"
+          align="center"
         >
           <template slot-scope="scope">
             (
@@ -418,12 +427,17 @@ export default {
     // 获取二级分类
     async handelSecondType() {
       this.options2 = [];
-      const { data: {
-        content
-      }} = await getDictFind({
+      const page = {
         pageIndex: 1,
         pageSize: 1000
-      }, { type: "美食" });
+      };
+      const param = {
+        type: "美食",
+        level: 3
+      };
+      const { data: {
+        content
+      }} = await getDictFind(page, param);
       content.forEach(item => {
         this.options2.push({
           value: item.name,
@@ -434,18 +448,25 @@ export default {
     async initTableData() {
       try {
         this.tableLoading = true;
+        const res = {
+          type: "美食"
+        };
+        if (this.name !== null && this.name !== "") {
+          res.name = this.name;
+        }
+        if (this.city !== null && this.city !== "") {
+          res.city = this.city;
+        }
+        if (this.region !== null && this.region !== "") {
+          res.region = this.region;
+        }
         const { data } = await getList(
-          {
-            name: this.name,
-            type: "美食",
-            region: this.region,
-            city: this.city
-
-          },
+          res,
           { pageIndex: 1,
             pageSize: 10
           }
         );
+
         this.tableData = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
@@ -561,7 +582,7 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.canEdit, this.isEdit);
+      console.log(this.form);
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;
@@ -575,13 +596,11 @@ export default {
               ...this.form,
               image: this.imageBase64
             };
-            console.log(params);
 
             // 新增门店
             if (!this.canEdit) {
               await addShop(params);
             } else if (this.canEdit && this.isEdit) {
-              console.log(111);
               await editShop(params);
             }
             this.resetForm();

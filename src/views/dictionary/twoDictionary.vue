@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-26 21:26:17
+ * @LastEditTime: 2023-06-26 21:30:03
 -->
 <!--
  * @Author: quling
@@ -16,28 +16,6 @@
   <div class="portal-container">
     <!-- 操作按钮 -->
     <div class="operation">
-      <div class="search">
-
-        <div class="search-item">
-          <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
-          />
-        </div>
-
-        <el-button
-          type="primary"
-          size="medium"
-          icon="el-icon-search"
-          @click="initTableData"
-        >搜索</el-button>
-        <el-button
-          size="medium"
-          icon="el-icon-search"
-          @click="handleFilterReset"
-        >重置</el-button>
-      </div>
       <el-button
         type="primary"
         size="medium"
@@ -56,20 +34,31 @@
         height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
+
         <el-table-column
           prop="parentName"
-          label="一级类"
+          label="二级类"
+          width="120"
           header-align="center"
           align="center"
         />
         <el-table-column
           prop="name"
-          label="二级类"
+          label="三级类"
+          width="200"
           header-align="center"
           align="center"
         />
         <el-table-column
+          prop="remark"
+          label="描述"
+          header-align="center"
+          align="left"
+          :show-overflow-tooltip="true"
+        />
+        <el-table-column
           label="操作"
+          width="150"
           header-align="center"
           align="center"
         >
@@ -102,7 +91,7 @@
         @current-change="handelCurrentPage"
       />
     </div>
-    <!-- 新增避坑 -->
+    <!-- 新增二级分类 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
@@ -122,28 +111,84 @@
           label-width="80px"
         ><el-row>
            <el-form-item
-             label="大类"
+             label="一级类"
              prop="parentName"
            >
              <el-select v-model="form.parentName" clearable placeholder="请选择">
                <el-option
-                 v-for="item in options"
-                 :key="item.value"
-                 :label="item.label"
-                 :value="item.value"
+                 v-for="item in tableDataOne"
+                 :key="item.id"
+                 :label="item.name"
+                 :value="item.name"
                />
              </el-select>
            </el-form-item>
          </el-row>
           <el-row>
             <el-form-item
-              label="小类"
+              label="二级类"
               prop="name"
             >
               <el-input
                 v-model="form.name"
                 placeholder="请输入类型"
                 style="width: 100%;"
+              />
+            </el-form-item>
+          </el-row>
+          <el-form-item
+            label="图片"
+            prop="image"
+          >
+            <el-upload
+              v-if="!imageBase64"
+              class="upload-demo"
+              action=""
+              :on-remove="handleRemove"
+              :before-remove="beforeRemove"
+              accept=".jpg,.png"
+              multiple
+              :limit="1"
+              :on-exceed="handleExceed"
+              :file-list="form.image"
+              :auto-upload="false"
+              :on-change="handleFileChange"
+            >
+              <el-button
+                size="small"
+                type="primary"
+              >点击上传</el-button>
+              <div
+                slot="tip"
+                class="el-upload__tip"
+              >
+                只能上传jpg/png文件，且不超过2M</div>
+            </el-upload>
+            <div v-else>
+
+              <img
+                class="image"
+                :src="imageBase64"
+                alt="门店照片"
+              >
+              <i
+                v-if="isEdit"
+                class="el-icon-refresh"
+                title="修改图片"
+                @click="handleChangeImage"
+              />
+            </div>
+          </el-form-item>
+          <el-row>
+            <el-form-item
+              label="描述"
+              prop="remark"
+            >
+              <el-input
+                v-model="form.remark"
+                type="textarea"
+                :autosize="{ minRows: 4, maxRows: 8}"
+                placeholder="请输入描述信息"
               />
             </el-form-item>
           </el-row>
@@ -190,34 +235,34 @@ export default {
       imageBase64: "", // 图片Base64编码
       form: {
         name: "",
-        parentName: "美食",
         type: "美食",
-        level: 2
+        remark: "",
+        parentName: "",
+        level: 3,
+        image: []
       },
       rules: {
         name: [
-          { required: true, message: "请输入名称", trigger: "blur" }
+          { required: true, message: "请输入二级类名称", trigger: "blur" }
         ],
-        parentName: [
+        remark: [
+          { required: true, message: "请输入说明名称", trigger: "blur" }
+        ],
+        type: [
           { required: true, message: "请选择类型", trigger: "change" }
+        ],
+        image: [
+          { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
       city: "成都市",
-      options: [
-        {
-          value: "美食",
-          label: "美食"
-        },
-        {
-          value: "风景",
-          label: "风景"
-        }
-      ],
+
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 10,
+      tableDataOne: []
     };
   },
   mounted() {
@@ -230,10 +275,24 @@ export default {
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
+      console.log(row);
+      //  const { name, type, remark, id, image } = row;
       const key = Object.keys(row);
       key.forEach((key) => {
-        this.form[key] = row[key];
+        if (key === "image") {
+          this.imageBase64 = row[key];
+          this.form.image = [{ name: "图片" }];
+        } else {
+          this.form[key] = row[key];
+        }
       });
+      /* this.form = {
+        name,
+        type,
+        remark,
+        id,
+        image
+      }; */
     },
     // 获取列表
     async initTableData() {
@@ -245,11 +304,22 @@ export default {
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
           }, {
-            level: 2
+            type: "美食",
+            level: 3
           }
         );
+        console.log(totalElements);
         this.totalElements = totalElements;
         this.tableData = content;
+        const { data } = await getDictFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          },
+          {
+            type: "美食"
+          }
+        );
+        this.tableDataOne = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
@@ -340,11 +410,16 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            this.form.type = this.form.parentName;
+            console.log(this.form);
+            const params = {
+              ...this.form,
+              image: this.imageBase64
+            };
+            console.log(params);
             if (this.canEdit) {
-              await postDictEdit(this.form);
+              await postDictEdit(params);
             } else {
-              await postDictAdd(this.form);
+              await postDictAdd(params);
             }
             this.resetForm();
             this.dialogVisible = false;
@@ -359,11 +434,46 @@ export default {
           return false;
         }
       });
+    },
+    // 文件选中
+    handleFileChange(file) {
+      this.form.image = [file];
+      // 检验选择文件格式
+      const fileType = file.name.split(".").reverse()[0].toLowerCase();
+      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      if (!imageList.includes(fileType)) {
+        alert("文件格式不正确");
+        return false;
+      }
+      // 创建文件读取实例
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(file.raw);
+      fileReader.onload = (e) => {
+        this.imageBase64 = e.target.result; // 获取base64字符串
+        this.$refs.form.validate();
+      };
+    },
+
+    handleRemove(file, fileList) {
+      this.form.image = [];
+    },
+    handleExceed() {
+      this.$message.warning(`当前限制选择 1 个文件`);
+    },
+    beforeRemove(file, fileList) {
+      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+      });
+    },
+    // 修改图片
+    handleChangeImage() {
+      this.imageBase64 = "";
+      this.form.image = [];
     }
   }
 };
 </script>
-
 <style lang="scss" scoped>
 .portal-container {
   padding: 15px;
