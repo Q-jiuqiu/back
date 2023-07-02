@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-27 20:49:54
+ * @LastEditTime: 2023-07-02 00:30:09
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -59,7 +59,7 @@
         v-loading="tableLoading"
         :data="tableData"
         border
-        height="100%"
+        height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
         <el-table-column
@@ -142,6 +142,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        background
+        :page-size="pageSize"
+        :page-count="pageIndex"
+        layout="prev, pager, next"
+        :total="totalElements"
+        style="display: flex;
+        justify-content: end;
+        align-content: center;"
+        @current-change="handelCurrentPage"
+      />
     </div>
     <!-- 新增门店 -->
     <el-dialog
@@ -177,16 +188,35 @@
               :disabled="!isEdit"
             />
           </el-form-item>
-          <el-form-item
-            label="地址"
-            prop="addr"
-          >
-            <el-input
-              v-model="form.addr"
-              placeholder="请输入门店地址"
-              :disabled="!isEdit"
-            />
-          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="地址"
+                prop="addr"
+              >
+                <el-input
+                  v-model="form.addr"
+                  placeholder="请输入门店地址"
+                  :disabled="!isEdit"
+                />
+
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="营业时间"
+                prop="workTime"
+              >
+
+                <el-input
+                  v-model="form.workTime"
+                  placeholder="请输入门店营业时间"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
           <el-row>
             <el-col :span="12">
               <el-form-item
@@ -403,7 +433,8 @@ export default {
         remark: "",
         type: "美食",
         secondType: "",
-        heat: 3
+        heat: 100,
+        workTime: "9:00-22:00"
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -413,6 +444,9 @@ export default {
         addr: [
           { required: true, message: "请输入门店地址", trigger: "blur" }
         ],
+        workTime: [
+          { required: true, message: "请输入门店营业时间", trigger: "blur" }
+        ],
         city: [
           { required: true, message: "请输入城市名称", trigger: "blur" }
         ],
@@ -421,11 +455,11 @@ export default {
         ],
         longitude: [
           { required: true, message: "请输入经度", trigger: "blur" },
-          { validator: validateLatitude, trigger: "blur" }
+          { validator: validateLongitude, trigger: "blur" }
         ],
         latitude: [
           { required: true, message: "请输入纬度", trigger: "blur" },
-          { validator: validateLongitude, trigger: "blur" }
+          { validator: validateLatitude, trigger: "blur" }
         ],
         image: [
           { required: true, message: "请上传图片", trigger: "blur" }
@@ -438,6 +472,9 @@ export default {
       name: "",
       city: "",
       region: "",
+      totalElements: 0,
+      pageIndex: 1,
+      pageSize: 10,
       options2: [],
       options3: []
     };
@@ -495,6 +532,7 @@ export default {
         this.tableLoading = true;
         const res = {
           type: "美食"
+          // threeType: "肥肠粉"
         };
         if (this.name !== null && this.name !== "") {
           res.name = this.name;
@@ -507,17 +545,24 @@ export default {
         }
         const { data } = await getList(
           res,
-          { pageIndex: 1,
-            pageSize: 10
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
           }
         );
 
         this.tableData = data.content;
+        this.totalElements = data.totalElements;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
+    },
+    // 分页
+    handelCurrentPage(index) {
+      console.log(index);
+      this.pageIndex = index;
+      this.initTableData();
     },
     // 重置搜索条件
     handleFilterReset() {
@@ -590,7 +635,7 @@ export default {
       key.forEach((key) => {
         if (key === "image") {
           this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
+          this.form.image = [];
         } else {
           this.form[key] = row[key];
         }
@@ -633,6 +678,7 @@ export default {
         this.dialogVisible = false;
         return;
       }
+      this.form.type = "美食";
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {

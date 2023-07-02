@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-27 20:54:59
+ * @LastEditTime: 2023-07-02 12:12:13
 -->
 <!--
  * @Author: quling
@@ -407,6 +407,8 @@ export default {
     // 提交表单
     handleFormConfirm() {
       console.log(this.form);
+      this.form.type = "美食";
+      this.form.level = 3;
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {

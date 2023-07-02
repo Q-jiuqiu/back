@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-18 22:03:42
+ * @LastEditTime: 2023-07-02 00:28:49
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -47,7 +47,7 @@
         v-loading="tableLoading"
         :data="tableData"
         border
-        height="100%"
+        height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
         <el-table-column
@@ -92,6 +92,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        background
+        :page-size="pageSize"
+        :page-count="pageIndex"
+        layout="prev, pager, next"
+        :total="totalElements"
+        style="display: flex;
+        justify-content: end;
+        align-content: center;"
+        @current-change="handelCurrentPage"
+      />
     </div>
     <!-- 新增城市推荐 -->
     <el-dialog
@@ -207,7 +218,7 @@
 </template>
 
 <script>
-import { postCityDict, getCityFind, deleteCityDict, postCityEdit } from "@/api";
+import { postCityDict, getCityFind, deleteCityDict, postCityEdit, getCityFindPage } from "@/api";
 
 export default {
   name: "Recommend",
@@ -241,6 +252,9 @@ export default {
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
       city: "成都市",
+      totalElements: 0,
+      pageIndex: 1,
+      pageSize: 10,
       cityOption: []
     };
   },
@@ -253,13 +267,16 @@ export default {
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getCityFind(
-          this.city
+        const { data } = await getCityFindPage(
+          this.pageIndex,
+          this.pageSize
         );
+        console.log(data);
         if (data === null) {
           this.tableData = [];
         } else {
-          this.tableData = [data];
+          this.tableData = data.content;
+          this.totalElements = data.totalElements;
         }
       } catch (error) {
         this.$message.warning("获取数据失败");
@@ -267,7 +284,12 @@ export default {
         this.tableLoading = false;
       }
     },
-
+    // 分页
+    handelCurrentPage(index) {
+      console.log(index);
+      this.pageIndex = index;
+      this.initTableData();
+    },
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";

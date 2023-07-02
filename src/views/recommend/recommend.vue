@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-27 21:02:54
+ * @LastEditTime: 2023-07-01 23:33:55
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -36,7 +36,7 @@
         </div>
         <div class="search-item">
           <div class="label">名称:</div>
-          <el-select v-model="form.name" placeholder="请选择" @change="handelNameChange">
+          <el-select v-model="form.name" filterable placeholder="请选择" @change="handelNameChange">
             <el-option
               v-for="item in nameOptions"
               :key="item.id"
@@ -119,6 +119,7 @@
           </template>
         </el-table-column>
       </el-table>
+
     </div>
     <!-- 新增门店推荐 -->
     <el-dialog
@@ -329,7 +330,7 @@ export default {
           city: city
         },
         { pageIndex: 1,
-          pageSize: 100
+          pageSize: 10000
         }
       );
       this.form.name = data.content[0].id;

@@ -1,8 +1,8 @@
 <!--
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
- * @LastEditors: quling
- * @LastEditTime: 2023-06-17 13:46:18
+ * @LastEditors: 何元鹏
+ * @LastEditTime: 2023-07-02 00:36:13
  * @Description: 评价
  * @FilePath: \vue-admin-template\src\views\comment\comment.vue
 -->
@@ -26,7 +26,7 @@
         </div>
         <div class="search-item">
           <div class="label">名称:</div>
-          <el-select v-model="form.name" placeholder="请选择" @change="handelNameChange">
+          <el-select v-model="form.name" filterable placeholder="请选择" @change="handelNameChange">
             <el-option v-for="item in nameOptions" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </div>
@@ -41,7 +41,7 @@
         v-loading="tableLoading"
         :data="tableData"
         border
-        height="100%"
+        height="calc(100% - 3rem )"
         empty-text="请先选择筛选条件"
       >
 
@@ -54,6 +54,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        background
+        :page-size="pageSize"
+        :page-count="pageIndex"
+        layout="prev, pager, next"
+        :total="totalElements"
+        style="display: flex;
+        justify-content: end;
+        align-content: center;"
+        @current-change="handelCurrentPage"
+      />
     </div>
   </div>
 </template>
@@ -91,6 +102,9 @@ export default {
         }
       ],
       cityOption: [],
+      totalElements: 0,
+      pageIndex: 1,
+      pageSize: 10,
       nameOptions: []
     };
   },
@@ -131,7 +145,7 @@ export default {
         },
         {
           pageIndex: 1,
-          pageSize: 100
+          pageSize: 10000
         }
       );
       this.nameOptions = data.content;
@@ -149,12 +163,13 @@ export default {
           const { data } = await getCommentById(
             {
               id: this.form.name,
-              pageIndex: 1,
-              pageSize: 10
+              pageIndex: this.pageIndex,
+              pageSize: this.pageSize
             }
           );
           console.log(data);
           this.tableData = data.content;
+          this.totalElements = data.totalElements;
         } else {
           this.$message.info("请选择店铺名称");
         }
@@ -163,6 +178,12 @@ export default {
       } finally {
         this.tableLoading = false;
       }
+    },
+    // 分页
+    handelCurrentPage(index) {
+      console.log(index);
+      this.pageIndex = index;
+      this.initTableData();
     },
 
     // 重置搜索条件

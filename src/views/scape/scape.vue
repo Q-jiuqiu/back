@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-26 21:46:02
+ * @LastEditTime: 2023-07-01 12:03:36
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -59,7 +59,7 @@
         v-loading="tableLoading"
         :data="tableData"
         border
-        height="100%"
+        height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
         <el-table-column
@@ -133,6 +133,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <el-pagination
+        background
+        :page-size="pageSize"
+        :page-count="pageIndex"
+        layout="prev, pager, next"
+        :total="totalElements"
+        style="display: flex;
+        justify-content: end;
+        align-content: center;"
+        @current-change="handelCurrentPage"
+      />
     </div>
     <!-- 新增门店 -->
     <el-dialog
@@ -398,11 +409,11 @@ export default {
         ],
         longitude: [
           { required: true, message: "请输入经度", trigger: "blur" },
-          { validator: validateLatitude, trigger: "blur" }
+          { validator: validateLongitude, trigger: "blur" }
         ],
         latitude: [
           { required: true, message: "请输入纬度", trigger: "blur" },
-          { validator: validateLongitude, trigger: "blur" }
+          { validator: validateLatitude, trigger: "blur" }
         ],
         image: [
           { required: true, message: "请上传图片", trigger: "blur" }
@@ -425,6 +436,9 @@ export default {
           label: "风景"
         }
       ],
+      totalElements: 0,
+      pageIndex: 1,
+      pageSize: 10,
       options2: []
     };
   },
@@ -467,17 +481,24 @@ export default {
         }
         const { data } = await getList(
           res,
-          { pageIndex: 1,
-            pageSize: 10
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
           }
         );
         console.log(data);
+        this.totalElements = data.totalElements;
         this.tableData = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
+    },
+    // 分页
+    handelCurrentPage(index) {
+      console.log(index);
+      this.pageIndex = index;
+      this.initTableData();
     },
     // 重置搜索条件
     handleFilterReset() {
