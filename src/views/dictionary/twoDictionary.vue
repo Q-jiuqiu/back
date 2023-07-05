@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-02 12:12:13
+ * @LastEditTime: 2023-07-05 19:50:22
 -->
 <!--
  * @Author: quling
@@ -16,6 +16,44 @@
   <div class="portal-container">
     <!-- 操作按钮 -->
     <div class="operation">
+      <div class="search">
+        <div class="search-item">
+          <div class="label">城市:</div>
+          <el-select v-model="searchCityData" clearable placeholder="请选择">
+            <el-option
+              v-for="item in filterCityList"
+              :key="item.id"
+              :label="item.city"
+              :value="item.city"
+            />
+          </el-select>
+
+        </div>
+        <div class="search-item">
+          <div class="label">分类:</div>
+          <el-select v-model="searchData" placeholder="选择分类">
+            <el-option
+              v-for="item in filterList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+
+        </div>
+
+        <el-button
+          type="primary"
+          size="medium"
+          icon="el-icon-search"
+          @click="initTableData"
+        >搜索</el-button>
+        <el-button
+          size="medium"
+          icon="el-icon-search"
+          @click="handleFilterReset"
+        >重置</el-button>
+      </div>
       <el-button
         type="primary"
         size="medium"
@@ -34,7 +72,13 @@
         height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
-
+        <el-table-column
+          prop="city"
+          label="城市"
+          width="120"
+          header-align="center"
+          align="center"
+        />
         <el-table-column
           prop="parentName"
           label="二级类"
@@ -109,21 +153,38 @@
           :rules="rules"
           :model="form"
           label-width="80px"
-        ><el-row>
-           <el-form-item
-             label="一级类"
-             prop="parentName"
-           >
-             <el-select v-model="form.parentName" clearable placeholder="请选择">
-               <el-option
-                 v-for="item in tableDataOne"
-                 :key="item.id"
-                 :label="item.name"
-                 :value="item.name"
-               />
-             </el-select>
-           </el-form-item>
-         </el-row>
+        >
+          <el-row>
+            <el-form-item
+              label="城市"
+              prop="city"
+            >
+              <el-select v-model="form.city" clearable placeholder="请选择">
+                <el-option
+                  v-for="item in filterCityList"
+                  :key="item.id"
+                  :label="item.city"
+                  :value="item.city"
+                />
+              </el-select>
+            </el-form-item>
+          </el-row>
+          <el-row>
+            <el-form-item
+              label="一级类"
+              prop="parentName"
+            >
+              <el-select v-model="form.parentName" clearable placeholder="请选择">
+                <el-option
+                  v-for="item in filterList"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.name"
+                />
+              </el-select>
+            </el-form-item>
+          </el-row>
+
           <el-row>
             <el-form-item
               label="二级类"
@@ -220,7 +281,7 @@
 </template>
 
 <script>
-import { postDictAdd, getDictFind, deleteDictPit, postDictEdit } from "@/api";
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 
 export default {
   name: "Portal",
@@ -233,15 +294,21 @@ export default {
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
       imageBase64: "", // 图片Base64编码
+      searchData: "",
+      searchCityData: "",
       form: {
         name: "",
         type: "美食",
         remark: "",
         parentName: "",
         level: 3,
-        image: []
+        image: [],
+        city: ""
       },
       rules: {
+        city: [
+          { required: true, message: "请选择类型", trigger: "change" }
+        ],
         name: [
           { required: true, message: "请输入二级类名称", trigger: "blur" }
         ],
@@ -257,18 +324,39 @@ export default {
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
-      city: "成都市",
-
+      filterCityList: [],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 20,
       tableDataOne: []
     };
   },
   mounted() {
+    this.getFilterList();
     this.initTableData();
   },
   methods: {
+    /* 获取筛选条件 */
+    async  getFilterList() {
+      const { data: {
+        content
+      }} = await getDictFind(
+        { pageIndex: 1,
+          pageSize: 10000
+        }, {
+          type: "美食",
+          parentName: "美食",
+          level: 2
+        }
+      );
+      this.filterList = content;
+      const { data } = await getCityFindPage(
+        1,
+        1000
+      );
+      this.filterCityList = data.content;
+    },
+
     // 编辑
     handleEdit(row) {
       this.dialogTitle = "编辑门店信息数据字典";
@@ -276,7 +364,6 @@ export default {
       this.canEdit = true;
       this.dialogVisible = true;
       console.log(row);
-      //  const { name, type, remark, id, image } = row;
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
@@ -286,13 +373,6 @@ export default {
           this.form[key] = row[key];
         }
       });
-      /* this.form = {
-        name,
-        type,
-        remark,
-        id,
-        image
-      }; */
     },
     // 获取列表
     async initTableData() {
@@ -305,22 +385,13 @@ export default {
             pageSize: this.pageSize
           }, {
             type: "美食",
-            level: 3
+            parentName: this.searchData,
+            level: 3,
+            city: this.searchCityData
           }
         );
-        console.log(totalElements);
         this.totalElements = totalElements;
         this.tableData = content;
-        const { data } = await getDictFind(
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          },
-          {
-            type: "美食",
-            parentName: "美食", level: 2
-          }
-        );
-        this.tableDataOne = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
@@ -329,7 +400,6 @@ export default {
     },
     // 分页
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
       this.initTableData();
     },
@@ -339,6 +409,7 @@ export default {
       this.name = "";
       this.city = "";
       this.region = "";
+      this.searchData = "";
       this.initTableData();
     },
     // 点击表格行
@@ -357,7 +428,7 @@ export default {
     // 增加门店-打开对话框
     handleShopAdd(event) {
       this.dialogTitle = "新增数据字典";
-      this.isEdit = true;
+      this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
     },
@@ -406,7 +477,7 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.form);
+      console.log(this.form, this.canEdit);
       this.form.type = "美食";
       this.form.level = 3;
       this.$refs.form.validate(async(valid) => {
@@ -420,14 +491,13 @@ export default {
             };
             console.log(params);
             if (this.canEdit) {
-              await postDictEdit(params);
+              await postDictEdit(params); this.$message.success(`编辑成功`);
             } else {
-              await postDictAdd(params);
+              await postDictAdd(params); this.$message.success(`新增成功`);
             }
             this.resetForm();
             this.dialogVisible = false;
             await this.initTableData();
-            this.$message.success(`新增成功`);
           } catch (error) {
             this.$message.error(`新增失败`);
           } finally {

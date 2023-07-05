@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-19 21:01:52
+ * @LastEditTime: 2023-07-03 20:41:47
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -83,7 +83,7 @@ export const constantRoutes = [
         path: "avoidPits",
         name: "avoidPits",
         component: () => import("@/views/avoidPits/avoidPits"),
-        meta: { title: "避坑", icon: "el-icon-s-opportunity" }
+        meta: { title: "指南", icon: "el-icon-s-opportunity" }
       },
       {
         path: "dictionary",

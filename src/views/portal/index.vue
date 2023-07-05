@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-02 00:30:09
+ * @LastEditTime: 2023-07-02 16:21:55
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -44,6 +44,7 @@
           @click="handleFilterReset"
         >重置</el-button>
       </div>
+
       <el-button
         type="primary"
         size="medium"
@@ -165,11 +166,7 @@
         class="dialog-title"
       >
         {{ dialogTitle }}
-        <i
-          v-if="canEdit"
-          class="icon el-icon-edit"
-          @click="handleFormEdit"
-        />
+
       </span>
       <div class="dialog-container">
         <el-form
@@ -185,7 +182,7 @@
             <el-input
               v-model="form.name"
               placeholder="请输入门店名称"
-              :disabled="!isEdit"
+              :disabled="canEdit && !isEdit "
             />
           </el-form-item>
           <el-row>
@@ -197,7 +194,7 @@
                 <el-input
                   v-model="form.addr"
                   placeholder="请输入门店地址"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
 
               </el-form-item>
@@ -211,7 +208,7 @@
                 <el-input
                   v-model="form.workTime"
                   placeholder="请输入门店营业时间"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
@@ -227,7 +224,7 @@
                   v-model="form.city"
                   placeholder="请输入城市"
                   style="width: 100%;"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
@@ -240,7 +237,7 @@
                   v-model="form.region"
                   placeholder="请输入地区"
                   style="width: 100%;"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
@@ -255,7 +252,7 @@
                   v-model="form.longitude"
                   placeholder="请输入经度"
                   type="number"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
@@ -268,7 +265,7 @@
                   v-model="form.latitude"
                   placeholder="请输入纬度"
                   type="number"
-                  :disabled="!isEdit"
+                  :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
@@ -292,7 +289,12 @@
               <el-form-item
                 label="小类"
               >
-                <el-select v-model="form.threeType" clearable placeholder="请选择">
+                <el-select
+                  v-model="form.threeType"
+                  clearable
+                  placeholder="请选择"
+                  @change="handelThreeTypeChange"
+                >
                   <el-option
                     v-for="item in options3"
                     :key="item.value"
@@ -362,7 +364,7 @@
               :autosize="{ minRows: 4, maxRows: 8}"
               type="textarea"
               placeholder="请输入描述信息"
-              :disabled="!isEdit"
+              :disabled="canEdit && !isEdit "
             />
           </el-form-item>
         </el-form>
@@ -433,6 +435,7 @@ export default {
         remark: "",
         type: "美食",
         secondType: "",
+        threeType: "",
         heat: 100,
         workTime: "9:00-22:00"
       },
@@ -505,16 +508,20 @@ export default {
         });
       });
     },
+    handelThreeTypeChange(value) {
+      this.form.threeType = value;
+    },
     async handelSecondTypeChange(value) {
       this.options3 = [];
       console.log(value);
+      this.form.secondType = value;
       const page = {
         pageIndex: 1,
         pageSize: 1000
       };
       const param = {
         type: "美食",
-        parentName: value,
+        parentName: this.form.secondType,
         level: 3
       };
       const { data: {
@@ -532,7 +539,6 @@ export default {
         this.tableLoading = true;
         const res = {
           type: "美食"
-          // threeType: "肥肠粉"
         };
         if (this.name !== null && this.name !== "") {
           res.name = this.name;
@@ -587,7 +593,8 @@ export default {
     // 增加门店-打开对话框
     handleShopAdd(event) {
       this.dialogTitle = "新增门店";
-      this.isEdit = true;
+      this.isEdit = false;
+      this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
     },
@@ -641,10 +648,11 @@ export default {
         }
       });
     },
-    handleEdit(row) {
+    // 编辑
+    async handleEdit(row) {
       this.dialogTitle = "编辑门店信息";
       this.isEdit = true;
-      this.canEdit = true;
+      this.canEdit = false;
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
@@ -655,11 +663,25 @@ export default {
           this.form[key] = row[key];
         }
       });
-    },
-    // 编辑
-    handleFormEdit() {
-      this.dialogTitle = "编辑门店信息";
-      this.isEdit = true;
+      const page = {
+        pageIndex: 1,
+        pageSize: 1000
+      };
+      const param = {
+        type: "美食",
+        parentName: this.form.secondType,
+        level: 3
+      };
+      const { data: {
+        content
+      }} = await getDictFind(page, param);
+      content.forEach(item => {
+        this.options3.push({
+          value: item.name,
+          label: item.name
+        });
+      });
+      console.log(this.options3);
     },
     // 重置表单
     resetForm() {
@@ -672,7 +694,16 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.form);
+      console.log(this.form, this.canEdit, this.isEdit);
+
+      // 新增门店
+      if (!this.canEdit && !this.isEdit) {
+        console.log("新增");
+      } else if (!this.canEdit && this.isEdit) {
+        console.log("编辑");
+      } else if (this.canEdit && !this.isEdit) {
+        console.log("查看");
+      }
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;
@@ -689,9 +720,9 @@ export default {
             };
 
             // 新增门店
-            if (!this.canEdit) {
+            if (!this.canEdit && !this.isEdit) {
               await addShop(params);
-            } else if (this.canEdit && this.isEdit) {
+            } else if (!this.canEdit && this.isEdit) {
               await editShop(params);
             }
             this.resetForm();
