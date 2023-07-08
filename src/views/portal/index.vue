@@ -694,16 +694,6 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.form, this.canEdit, this.isEdit);
-
-      // 新增门店
-      if (!this.canEdit && !this.isEdit) {
-        console.log("新增");
-      } else if (!this.canEdit && this.isEdit) {
-        console.log("编辑");
-      } else if (this.canEdit && !this.isEdit) {
-        console.log("查看");
-      }
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-01 12:03:36
+ * @LastEditTime: 2023-07-08 17:21:08
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -49,7 +49,7 @@
         size="medium"
         @click="handleShopAdd"
       >
-        新增门店
+        新增景区
       </el-button>
     </div>
     <!-- 表格 -->
@@ -145,7 +145,7 @@
         @current-change="handelCurrentPage"
       />
     </div>
-    <!-- 新增门店 -->
+    <!-- 新增景区 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
@@ -170,25 +170,42 @@
           label-width="80px"
         >
           <el-form-item
-            label="门店名称"
+            label="景区名称"
             prop="name"
           >
             <el-input
               v-model="form.name"
-              placeholder="请输入门店名称"
+              placeholder="请输入景区名称"
               :disabled="!isEdit"
             />
           </el-form-item>
-          <el-form-item
-            label="地址"
-            prop="addr"
-          >
-            <el-input
-              v-model="form.addr"
-              placeholder="请输入门店地址"
-              :disabled="!isEdit"
-            />
-          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="地址"
+                prop="addr"
+              >
+                <el-input
+                  v-model="form.addr"
+                  placeholder="请输入景区地址"
+                  :disabled="!isEdit"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="营业时间"
+                prop="workTime"
+              >
+
+                <el-input
+                  v-model="form.workTime"
+                  placeholder="请输入景区营业时间"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-row>
             <el-col :span="12">
               <el-form-item
@@ -263,8 +280,20 @@
             <el-col :span="8">
               <el-form-item
                 label="热度"
+                :disabled="!isEdit"
               >
                 <el-input-number v-model="form.heat" :min="1" :max="100" label="热度" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item
+                label="景区等级"
+              >
+                <el-input
+                  v-model="form.threeType"
+                  placeholder="请输入景区等级"
+                  :disabled="!isEdit"
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -301,7 +330,7 @@
               <img
                 class="image"
                 :src="imageBase64"
-                alt="门店照片"
+                alt="景区照片"
               >
               <i
                 v-if="isEdit"
@@ -374,7 +403,7 @@ export default {
       tableData: [],
       delLoading: false,
       dialogVisible: false, // 对话框显隐
-      dialogTitle: "新增门店",
+      dialogTitle: "新增景区",
       dialogImageUrl: "", // 图片预览地址
       hasImg: false, // 是否有图片
       picture: null, // 图片-文件
@@ -391,18 +420,23 @@ export default {
         remark: "",
         type: "风景",
         secondType: "",
-        heat: 3
+        heat: 100,
+        workTime: "9:00-18:00",
+        threeType: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
         name: [
-          { required: true, message: "请输入门店名称", trigger: "blur" }
+          { required: true, message: "请输入景区名称", trigger: "blur" }
         ],
         addr: [
-          { required: true, message: "请输入门店地址", trigger: "blur" }
+          { required: true, message: "请输入景区地址", trigger: "blur" }
         ],
         city: [
           { required: true, message: "请输入城市名称", trigger: "blur" }
+        ],
+        workTime: [
+          { required: true, message: "请输入景区营业时间", trigger: "blur" }
         ],
         region: [
           { required: true, message: "请输入地区名称", trigger: "blur" }
@@ -419,7 +453,7 @@ export default {
           { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
-      addBtnLoading: false, // 添加门店loading
+      addBtnLoading: false, // 添加景区loading
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
@@ -520,9 +554,9 @@ export default {
       }
       target.blur();
     },
-    // 增加门店-打开对话框
+    // 增加景区-打开对话框
     handleShopAdd(event) {
-      this.dialogTitle = "新增门店";
+      this.dialogTitle = "新增景区";
       this.isEdit = true;
       this.dissolveFocus(event);
       this.dialogVisible = true;
@@ -537,9 +571,9 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除门店
+    // 删除景区
     handleShopDel(item) {
-      this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
+      this.$confirm("此操作将永久删除选中景区, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
@@ -563,7 +597,7 @@ export default {
     },
     // 查看
     handlePreview(row) {
-      this.dialogTitle = "查看门店信息";
+      this.dialogTitle = "查看景区信息";
       this.canEdit = true;
       this.isEdit = false;
       this.dialogVisible = true;
@@ -578,7 +612,7 @@ export default {
       });
     },
     handleEdit(row) {
-      this.dialogTitle = "编辑门店信息";
+      this.dialogTitle = "编辑景区信息";
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
@@ -594,7 +628,7 @@ export default {
     },
     // 编辑
     handleFormEdit() {
-      this.dialogTitle = "编辑门店信息";
+      this.dialogTitle = "编辑景区信息";
       this.isEdit = true;
     },
     // 重置表单
@@ -614,6 +648,7 @@ export default {
         this.dialogVisible = false;
         return;
       }
+      this.form.type = "风景";
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
@@ -624,7 +659,7 @@ export default {
             };
             console.log(params);
 
-            // 新增门店
+            // 新增景区
             if (!this.canEdit) {
               await addShop(params);
             } else if (this.canEdit && this.isEdit) {

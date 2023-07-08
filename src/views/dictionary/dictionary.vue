@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-26 21:26:17
+ * @LastEditTime: 2023-07-06 21:13:59
 -->
 <!--
  * @Author: quling
@@ -18,12 +18,17 @@
     <div class="operation">
       <div class="search">
 
-        <div class="search-item">
+        <!--  <div class="search-item">
           <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
-          />
+          <el-select v-model="searchCityData" clearable placeholder="请选择">
+            <el-option
+              v-for="item in filterCityList"
+              :key="item.id"
+              :label="item.city"
+              :value="item.city"
+            />
+          </el-select>
+
         </div>
 
         <el-button
@@ -36,7 +41,7 @@
           size="medium"
           icon="el-icon-search"
           @click="handleFilterReset"
-        >重置</el-button>
+        >重置</el-button> -->
       </div>
       <el-button
         type="primary"
@@ -56,6 +61,13 @@
         height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
+        <!-- <el-table-column
+          prop="city"
+          label="城市"
+          width="120"
+          header-align="center"
+          align="center"
+        /> -->
         <el-table-column
           prop="parentName"
           label="一级类"
@@ -120,21 +132,37 @@
           :rules="rules"
           :model="form"
           label-width="80px"
-        ><el-row>
-           <el-form-item
-             label="大类"
-             prop="parentName"
-           >
-             <el-select v-model="form.parentName" clearable placeholder="请选择">
-               <el-option
-                 v-for="item in options"
-                 :key="item.value"
-                 :label="item.label"
-                 :value="item.value"
-               />
-             </el-select>
-           </el-form-item>
-         </el-row>
+        >
+          <!-- <el-row>
+            <el-form-item
+              label="城市"
+              prop="city"
+            >
+              <el-select v-model="form.city" clearable placeholder="请选择">
+                <el-option
+                  v-for="item in filterCityList"
+                  :key="item.id"
+                  :label="item.city"
+                  :value="item.city"
+                />
+              </el-select>
+            </el-form-item>
+          </el-row> -->
+          <el-row>
+            <el-form-item
+              label="大类"
+              prop="parentName"
+            >
+              <el-select v-model="form.parentName" clearable placeholder="请选择">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-row>
           <el-row>
             <el-form-item
               label="小类"
@@ -175,7 +203,7 @@
 </template>
 
 <script>
-import { postDictAdd, getDictFind, deleteDictPit, postDictEdit } from "@/api";
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 
 export default {
   name: "Portal",
@@ -193,6 +221,7 @@ export default {
         parentName: "美食",
         type: "美食",
         level: 2
+        // city: ""
       },
       rules: {
         name: [
@@ -201,10 +230,13 @@ export default {
         parentName: [
           { required: true, message: "请选择类型", trigger: "change" }
         ]
+        /*  city: [
+          { required: true, message: "请选择类型", trigger: "change" }
+        ] */
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
-      city: "成都市",
+      searchCityData: "",
       options: [
         {
           value: "美食",
@@ -217,7 +249,8 @@ export default {
       ],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 10,
+      filterCityList: []
     };
   },
   mounted() {
@@ -246,10 +279,16 @@ export default {
             pageSize: this.pageSize
           }, {
             level: 2
+            // city: this.searchCityData
           }
         );
         this.totalElements = totalElements;
         this.tableData = content;
+        const { data } = await getCityFindPage(
+          1,
+          1000
+        );
+        this.filterCityList = data.content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
@@ -258,7 +297,6 @@ export default {
     },
     // 分页
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
       this.initTableData();
     },
@@ -266,13 +304,12 @@ export default {
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
-      this.city = "";
+      this.searchCityData = "";
       this.region = "";
       this.initTableData();
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
