@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-02 00:28:49
+ * @LastEditTime: 2023-07-25 19:35:54
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -24,7 +24,7 @@
           type="primary"
           size="medium"
           icon="el-icon-search"
-          @click="initTableData"
+          @click="handelSearchTableData"
         >搜索</el-button>
         <el-button
           size="medium"
@@ -48,8 +48,12 @@
         :data="tableData"
         border
         height="calc(100% - 3rem )"
+        row-key="id"
+        default-expand-all
+        :tree-props="{children: 'childs', hasChildren: 'hasChildren'}"
         @row-click="handleRowClick"
       >
+
         <el-table-column
           prop="city"
           label="城市"
@@ -66,11 +70,16 @@
         />
         <el-table-column
           label="操作"
-          width="150"
+          width="230"
           header-align="center"
           align="center"
         >
           <template slot-scope="scope">
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handleNewAddCity(scope.row)"
+            > 新增</el-button>
             <el-button
               type="text"
               size="small"
@@ -92,17 +101,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination
-        background
-        :page-size="pageSize"
-        :page-count="pageIndex"
-        layout="prev, pager, next"
-        :total="totalElements"
-        style="display: flex;
-        justify-content: end;
-        align-content: center;"
-        @current-change="handelCurrentPage"
-      />
+
     </div>
     <!-- 新增城市推荐 -->
     <el-dialog
@@ -252,43 +251,37 @@ export default {
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
       city: "成都市",
-      totalElements: 0,
-      pageIndex: 1,
-      pageSize: 10,
-      cityOption: []
+      cityOption: [],
+      parentCity: -1 // 父级城市id
     };
   },
   mounted() {
     this.initTableData();
   },
   methods: {
-
+    // 搜索数据
+    async handelSearchTableData() {
+      const data = await getCityFind(this.city);
+      console.log(data);
+      this.tableData = data;
+    },
     // 查询描述列表
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getCityFindPage(
-          this.pageIndex,
-          this.pageSize
-        );
-        console.log(data);
-        if (data === null) {
-          this.tableData = [];
-        } else {
-          this.tableData = data.content;
-          this.totalElements = data.totalElements;
-        }
+        const { data } = await getCityFindPage();
+        this.tableData = data;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-    // 分页
-    handelCurrentPage(index) {
-      console.log(index);
-      this.pageIndex = index;
-      this.initTableData();
+    // 新增城市下级
+    async handleNewAddCity(row) {
+      console.log(row);
+      this.dialogVisible = true;
+      this.parentCity = row.id;
     },
     // 重置搜索条件
     handleFilterReset() {
@@ -317,6 +310,7 @@ export default {
       this.dissolveFocus(event);
       this.form.images = [];
       this.dialogVisible = true;
+      this.parentCity = -1;
     },
     // 关闭对话
     handleDialogClose(done) {
@@ -388,6 +382,7 @@ export default {
       this.form.city = row.city;
       this.form.id = row.id;
       this.form.remark = row.remark;
+      this.form.parentCity = row.parentCity;
     },
     // 编辑
     handleFormEdit() {
@@ -416,15 +411,19 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            const params = {
-              ...this.form
-            };
-            console.log(params);
+
             // 新增城市
             if (!this.canEdit) {
+              const params = {
+                ...this.form,
+                parentCity: this.parentCity
+              };
               await postCityDict(params);
               this.resetForm();
             } else if (this.canEdit && this.isEdit) {
+              const params = {
+                ...this.form
+              };
               await postCityEdit(params);
             }
             this.dialogVisible = false;

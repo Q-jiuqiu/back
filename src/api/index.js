@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-02 00:16:19
+ * @LastEditTime: 2023-07-25 19:02:19
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -170,9 +170,9 @@ export function getCityFind(city) {
   });
 }
 // 查询城市分页
-export function getCityFindPage(pageIndex, pageSize) {
+export function getCityFindPage() {
   return request({
-    url: `/pro/rest/dbs/city/dict/find/page/${pageIndex}/${pageSize}`,
+    url: `/pro/rest/dbs/city/dict/find/tree`,
     method: "get"
   });
 }

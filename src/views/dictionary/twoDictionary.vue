@@ -2,15 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-05 20:06:40
--->
-<!--
- * @Author: quling
- * @Date: 2023-04-27 22:44:28
- * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-06 22:35:43
- * @Description: 首页
- * @FilePath: \vue-admin-template\src\views\portal\index.vue
+ * @LastEditTime: 2023-07-25 20:29:48
 -->
 <template>
   <div class="portal-container">
@@ -19,14 +11,13 @@
       <div class="search">
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-select v-model="searchCityData" clearable placeholder="请选择">
-            <el-option
-              v-for="item in filterCityList"
-              :key="item.id"
-              :label="item.city"
-              :value="item.city"
-            />
-          </el-select>
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true }"
+            clearable
+            placeholder="请选择"
+          />
 
         </div>
         <div class="search-item">
@@ -46,7 +37,7 @@
           type="primary"
           size="medium"
           icon="el-icon-search"
-          @click="initTableData"
+          @click="handelSearchTableData"
         >搜索</el-button>
         <el-button
           size="medium"
@@ -159,14 +150,14 @@
               label="城市"
               prop="city"
             >
-              <el-select v-model="form.city" clearable placeholder="请选择">
-                <el-option
-                  v-for="item in filterCityList"
-                  :key="item.id"
-                  :label="item.city"
-                  :value="item.city"
-                />
-              </el-select>
+              <el-cascader
+                v-model="form.city"
+                :options="filterCityList"
+                :props="{ checkStrictly: true }"
+                style="width: 100%;"
+                clearable
+                placeholder="请选择"
+              />
             </el-form-item>
           </el-row>
           <el-row>
@@ -334,8 +325,49 @@ export default {
   mounted() {
     this.getFilterList();
     this.initTableData();
+    this.getFilterCityListData();
   },
   methods: {
+    /* 搜索数据 */
+    async  handelSearchTableData() {
+      try {
+        this.tableLoading = true;
+        const { data: {
+          content, totalElements
+        }} = await getDictFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }, {
+            type: "美食",
+            parentName: this.searchData,
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          }
+        );
+        this.totalElements = totalElements;
+        this.tableData = content;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+
+    /* 城市数据 */
+    async  getFilterCityListData() {
+      const { data } = await getCityFindPage();
+      function convertData(data) {
+        return data.map(item => ({
+          value: item.city,
+          label: item.city,
+          children: item.childs ? convertData(item.childs) : []
+        }));
+      }
+
+      const outputData = convertData(data);
+      console.log(outputData);
+      this.filterCityList = outputData;
+    },
     /* 获取筛选条件 */
     async  getFilterList() {
       const { data: {
@@ -350,11 +382,6 @@ export default {
         }
       );
       this.filterList = content;
-      const { data } = await getCityFindPage(
-        1,
-        1000
-      );
-      this.filterCityList = data.content;
     },
 
     // 编辑
@@ -485,6 +512,7 @@ export default {
           try {
             this.addBtnLoading = true;
             console.log(this.form);
+            this.form.city = this.form.city[this.form.city.length - 1];
             const params = {
               ...this.form,
               image: this.imageBase64
