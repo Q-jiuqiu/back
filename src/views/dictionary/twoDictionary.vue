@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-25 20:29:48
+ * @LastEditTime: 2023-08-02 17:51:11
 -->
 <template>
   <div class="portal-container">
@@ -14,7 +14,7 @@
           <el-cascader
             v-model="searchCityData"
             :options="filterCityList"
-            :props="{ checkStrictly: true }"
+            :props="{ checkStrictly: true,...props }"
             clearable
             placeholder="请选择"
           />
@@ -153,10 +153,10 @@
               <el-cascader
                 v-model="form.city"
                 :options="filterCityList"
-                :props="{ checkStrictly: true }"
+                :props="{ checkStrictly: true,...props }"
                 style="width: 100%;"
                 clearable
-                placeholder="请选择"
+                :placeholder="form.city"
               />
             </el-form-item>
           </el-row>
@@ -190,7 +190,6 @@
           </el-row>
           <el-form-item
             label="图片"
-            prop="image"
           >
             <el-upload
               v-if="!imageBase64"
@@ -234,7 +233,6 @@
           <el-row>
             <el-form-item
               label="描述"
-              prop="remark"
             >
               <el-input
                 v-model="form.remark"
@@ -273,9 +271,9 @@
 
 <script>
 import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
-
 export default {
   name: "Portal",
+
   data() {
     return {
       tableData: [],
@@ -285,7 +283,7 @@ export default {
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
       imageBase64: "", // 图片Base64编码
-      searchData: "",
+      searchData: "小吃类",
       searchCityData: "",
       form: {
         name: "",
@@ -303,14 +301,8 @@ export default {
         name: [
           { required: true, message: "请输入二级类名称", trigger: "blur" }
         ],
-        remark: [
-          { required: true, message: "请输入说明名称", trigger: "blur" }
-        ],
         type: [
           { required: true, message: "请选择类型", trigger: "change" }
-        ],
-        image: [
-          { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
       addBtnLoading: false, // 添加门店loading
@@ -319,7 +311,26 @@ export default {
       totalElements: 0,
       pageIndex: 1,
       pageSize: 20,
-      tableDataOne: []
+      tableDataOne: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          const { data: { id }} = node;
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          console.log(outputData);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
@@ -355,17 +366,17 @@ export default {
 
     /* 城市数据 */
     async  getFilterCityListData() {
-      const { data } = await getCityFindPage();
+      const { data } = await getCityFindPage(this.parentCity);
       function convertData(data) {
         return data.map(item => ({
           value: item.city,
+          id: item.id,
           label: item.city,
-          children: item.childs ? convertData(item.childs) : []
+          level: item.level
         }));
       }
 
       const outputData = convertData(data);
-      console.log(outputData);
       this.filterCityList = outputData;
     },
     /* 获取筛选条件 */
@@ -390,7 +401,6 @@ export default {
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
-      console.log(row);
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
@@ -414,7 +424,7 @@ export default {
             type: "美食",
             parentName: this.searchData,
             level: 3,
-            city: this.searchCityData
+            city: this.searchCityData[ this.searchCityData.length - 1]
           }
         );
         this.totalElements = totalElements;
@@ -504,7 +514,6 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.form, this.canEdit);
       this.form.type = "美食";
       this.form.level = 3;
       this.$refs.form.validate(async(valid) => {
@@ -512,7 +521,7 @@ export default {
           try {
             this.addBtnLoading = true;
             console.log(this.form);
-            this.form.city = this.form.city[this.form.city.length - 1];
+            this.form.city = this.form.city.join("/");
             const params = {
               ...this.form,
               image: this.imageBase64

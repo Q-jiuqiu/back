@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-25 19:35:54
+ * @LastEditTime: 2023-07-31 22:48:37
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -14,9 +14,12 @@
 
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true,...props }"
+            clearable
+            placeholder="请选择"
           />
         </div>
 
@@ -49,7 +52,9 @@
         border
         height="calc(100% - 3rem )"
         row-key="id"
-        default-expand-all
+
+        lazy
+        :load="handelLoadClick"
         :tree-props="{children: 'childs', hasChildren: 'hasChildren'}"
         @row-click="handleRowClick"
       >
@@ -59,7 +64,7 @@
           label="城市"
           header-align="center"
           align="left"
-          width="200"
+          width="500"
         />
         <el-table-column
           prop="remark"
@@ -252,7 +257,32 @@ export default {
       // 搜索关键字
       city: "成都市",
       cityOption: [],
-      parentCity: -1 // 父级城市id
+      searchCityData: [],
+      filterCityList: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          let id;
+          if (node.data?.id) {
+            id = node.data.id;
+          } else {
+            id = -1;
+          }
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          console.log(outputData);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
@@ -261,21 +291,46 @@ export default {
   methods: {
     // 搜索数据
     async handelSearchTableData() {
-      const data = await getCityFind(this.city);
-      console.log(data);
+      const data = await getCityFind(this.searchCityData[ this.searchCityData.length - 1]);
       this.tableData = data;
+    },
+    /* 城市数据 */
+    getFilterCityListData(data) {
+      return data.map(item => ({
+        value: item.city,
+        id: item.id,
+        label: item.city,
+        level: item.level
+      }));
     },
     // 查询描述列表
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getCityFindPage();
-        this.tableData = data;
+        const { data } = await getCityFindPage(this.parentCity);
+        const newData = data.map(item => ({ ...item, hasChildren: true }));
+        this.tableData = newData;
+
+        const outputData = this.getFilterCityListData(data);
+        this.filterCityList = outputData;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
+    },
+    // 查询下级
+    async handelLoadClick(tree, treeNode, resolve) {
+      const { data } = await getCityFindPage(tree.id);
+      const newData = data.map(item => {
+        if (item.level !== "3") {
+          return ({ ...item, hasChildren: true });
+        } else {
+          return { ...item };
+        }
+      });
+      console.log(data, newData);
+      resolve(newData);
     },
     // 新增城市下级
     async handleNewAddCity(row) {

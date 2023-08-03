@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-02 16:21:55
+ * @LastEditTime: 2023-08-01 19:10:30
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -20,23 +20,20 @@
         </div>
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true,...props }"
+            clearable
+            placeholder="请选择"
           />
         </div>
-        <div class="search-item">
-          <div class="label">区域:</div>
-          <el-input
-            v-model="region"
-            placeholder="搜索区域"
-          />
-        </div>
+
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
-          @click="initTableData"
+          @click="handelSearchTableData"
         >搜索</el-button>
         <el-button
           size="medium"
@@ -159,7 +156,7 @@
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
-      width="70%"
+      width="50%"
     >
       <span
         slot="title"
@@ -220,25 +217,21 @@
                 label="城市"
                 prop="city"
               >
-                <el-input
+                <el-cascader
                   v-model="form.city"
-                  placeholder="请输入城市"
+                  :options="filterCityList"
+                  :props="{ checkStrictly: true,...props }"
                   style="width: 100%;"
-                  :disabled="canEdit && !isEdit "
+                  clearable
+                  :placeholder="form.city"
                 />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="地区"
-                prop="region"
+                label="热度"
               >
-                <el-input
-                  v-model="form.region"
-                  placeholder="请输入地区"
-                  style="width: 100%;"
-                  :disabled="canEdit && !isEdit "
-                />
+                <el-input-number v-model="form.heat" style="width: 100%;" :min="1" :max="100" label="热度" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -271,11 +264,11 @@
             </el-col>
           </el-row>
           <el-row>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item
                 label="大类"
               >
-                <el-select v-model="form.secondType" clearable placeholder="请选择" @change="handelSecondTypeChange">
+                <el-select v-model="form.secondType" style="width: 100%;" clearable placeholder="请选择" @change="handelSecondTypeChange">
                   <el-option
                     v-for="item in options2"
                     :key="item.value"
@@ -285,12 +278,13 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
+            <el-col :span="12">
               <el-form-item
                 label="小类"
               >
                 <el-select
                   v-model="form.threeType"
+                  style="width: 100%;"
                   clearable
                   placeholder="请选择"
                   @change="handelThreeTypeChange"
@@ -304,17 +298,10 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :span="8">
-              <el-form-item
-                label="热度"
-              >
-                <el-input-number v-model="form.heat" :min="1" :max="100" label="热度" />
-              </el-form-item>
-            </el-col>
+
           </el-row>
           <el-form-item
             label="图片"
-            prop="image"
           >
             <el-upload
               v-if="!imageBase64"
@@ -357,7 +344,6 @@
           </el-form-item>
           <el-form-item
             label="描述"
-            prop="remark"
           >
             <el-input
               v-model="form.remark"
@@ -393,7 +379,7 @@
 </template>
 
 <script>
-import { getList, addShop, delShop, editShop, getDictFind } from "@/api";
+import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
 
 export default {
   name: "Portal",
@@ -427,8 +413,7 @@ export default {
       form: {
         name: "",
         addr: "",
-        city: "",
-        region: "",
+        city: [],
         latitude: "",
         longitude: "",
         image: [],
@@ -444,17 +429,8 @@ export default {
         name: [
           { required: true, message: "请输入门店名称", trigger: "blur" }
         ],
-        addr: [
-          { required: true, message: "请输入门店地址", trigger: "blur" }
-        ],
-        workTime: [
-          { required: true, message: "请输入门店营业时间", trigger: "blur" }
-        ],
         city: [
           { required: true, message: "请输入城市名称", trigger: "blur" }
-        ],
-        region: [
-          { required: true, message: "请输入地区名称", trigger: "blur" }
         ],
         longitude: [
           { required: true, message: "请输入经度", trigger: "blur" },
@@ -463,9 +439,6 @@ export default {
         latitude: [
           { required: true, message: "请输入纬度", trigger: "blur" },
           { validator: validateLatitude, trigger: "blur" }
-        ],
-        image: [
-          { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
       addBtnLoading: false, // 添加门店loading
@@ -474,19 +447,81 @@ export default {
       // 搜索关键字
       name: "",
       city: "",
-      region: "",
       totalElements: 0,
       pageIndex: 1,
       pageSize: 10,
       options2: [],
-      options3: []
+      options3: [],
+      filterCityList: [],
+      searchCityData: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          const { data: { id }} = node;
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
     this.initTableData();
     this.handelSecondType();
+    this.getFilterCityListData(this.parentCity);
   },
   methods: {
+    /* 搜索数据 */
+    async  handelSearchTableData() {
+      try {
+        this.tableLoading = true;
+        const res = {
+          type: "美食"
+        };
+        if (this.name !== null && this.name !== "") {
+          res.name = this.name;
+        }
+        if (this.searchCityData.length) {
+          res.city = this.searchCityData[ this.searchCityData.length - 1];
+        }
+        const { data } = await getList(
+          res,
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }
+        );
+
+        this.tableData = data.content;
+        this.totalElements = data.totalElements;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+    /* 城市数据 */
+    async  getFilterCityListData(parentCity) {
+      const { data } = await getCityFindPage(parentCity);
+      function convertData(data) {
+        return data.map(item => ({
+          value: item.city,
+          label: item.city,
+          id: item.id,
+          children: item.childs ? convertData(item.childs) : []
+        }));
+      }
+      const outputData = convertData(data);
+      this.filterCityList = outputData;
+    },
     // 获取二级分类
     async handelSecondType() {
       this.options2 = [];
@@ -546,9 +581,7 @@ export default {
         if (this.city !== null && this.city !== "") {
           res.city = this.city;
         }
-        if (this.region !== null && this.region !== "") {
-          res.region = this.region;
-        }
+
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
@@ -566,7 +599,6 @@ export default {
     },
     // 分页
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
       this.initTableData();
     },
@@ -574,12 +606,10 @@ export default {
     handleFilterReset() {
       this.name = "";
       this.city = "";
-      this.region = "";
       this.initTableData();
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -663,6 +693,20 @@ export default {
           this.form[key] = row[key];
         }
       });
+      this.form.city = this.form.city.split("/");
+
+      console.log(this.form.city);
+      /*   this.filterCityList.forEach(async item => {
+        if (item.value === this.form.city[0]) {
+          const { data } = await getCityFindPage(item.id);
+          const children = data.map(item => ({
+            value: item.city,
+            label: item.city,
+            id: item.id
+          }));
+          item.children = children;
+        }
+      }); */
       const page = {
         pageIndex: 1,
         pageSize: 1000
@@ -681,7 +725,6 @@ export default {
           label: item.name
         });
       });
-      console.log(this.options3);
     },
     // 重置表单
     resetForm() {
@@ -694,6 +737,7 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
+      console.log(this.form.city);
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;
@@ -704,6 +748,7 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
+            this.form.city = this.form.city.join("/");
             const params = {
               ...this.form,
               image: this.imageBase64
