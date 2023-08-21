@@ -2,35 +2,42 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-15 21:28:28
--->
-<!--
- * @Author: quling
- * @Date: 2023-04-27 22:44:28
- * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-06 22:35:43
- * @Description: 首页
- * @FilePath: \vue-admin-template\src\views\portal\index.vue
+ * @LastEditTime: 2023-08-14 16:30:21
 -->
 <template>
   <div class="portal-container">
     <!-- 操作按钮 -->
     <div class="operation">
       <div class="search">
-
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true,...props }"
+            clearable
+            placeholder="请选择"
           />
+
+        </div>
+        <div class="search-item">
+          <div class="label">分类:</div>
+          <el-select v-model="searchData" placeholder="选择分类">
+            <el-option
+              v-for="item in filterLists"
+              :key="item.id"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+
         </div>
 
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
-          @click="initTableData"
+          @click="handelSearchTableData"
         >搜索</el-button>
         <el-button
           size="medium"
@@ -43,7 +50,7 @@
         size="medium"
         @click="handleShopAdd"
       >
-        新增避坑
+        新增字典
       </el-button>
     </div>
     <!-- 表格 -->
@@ -59,19 +66,26 @@
         <el-table-column
           prop="city"
           label="城市"
-          width="300"
+          width="120"
           header-align="center"
-          align="left"
+          align="center"
         />
         <el-table-column
-          prop="type"
-          label="类型"
+          prop="parentName"
+          label="二级类"
+          width="120"
           header-align="center"
-          width="100"
-          align="left"
+          align="center"
         />
         <el-table-column
-          prop="leaveWord"
+          prop="name"
+          label="三级类"
+          width="200"
+          header-align="center"
+          align="center"
+        />
+        <el-table-column
+          prop="remark"
           label="描述"
           header-align="center"
           align="left"
@@ -84,7 +98,11 @@
           align="center"
         >
           <template slot-scope="scope">
-
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handleEdit(scope.row)"
+            >编辑</el-button>
             <el-button
               type="text"
               size="small"
@@ -103,12 +121,12 @@
         layout="prev, pager, next"
         :total="totalElements"
         style="display: flex;
-    justify-content: end;
-    align-content: center;"
+        justify-content: end;
+        align-content: center;"
         @current-change="handelCurrentPage"
       />
     </div>
-    <!-- 新增避坑 -->
+    <!-- 新增二级分类 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
@@ -118,11 +136,7 @@
         class="dialog-title"
       >
         {{ dialogTitle }}
-        <i
-          v-if="canEdit"
-          class="icon el-icon-edit"
-          @click="handleFormEdit"
-        />
+
       </span>
       <div class="dialog-container">
         <el-form
@@ -136,36 +150,92 @@
               label="城市"
               prop="city"
             >
-              <el-input
+              <el-cascader
                 v-model="form.city"
-                placeholder="请输入城市"
+                :options="filterCityList"
+                :props="{ checkStrictly: true,...props }"
                 style="width: 100%;"
-                :disabled="!isEdit"
+                clearable
+                :placeholder="form.city"
               />
             </el-form-item>
           </el-row>
           <el-row>
             <el-form-item
-              label="类型"
-              prop="type"
+              label="一级类"
+              prop="parentName"
             >
-              <el-select v-model="form.type" clearable placeholder="请选择">
+              <el-select v-model="form.parentName" clearable placeholder="请选择">
                 <el-option
-                  v-for="item in options"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+                  v-for="item in filterList"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.name"
                 />
               </el-select>
             </el-form-item>
           </el-row>
+
+          <el-row>
+            <el-form-item
+              label="二级类"
+              prop="name"
+            >
+              <el-input
+                v-model="form.name"
+                placeholder="请输入类型"
+                style="width: 100%;"
+              />
+            </el-form-item>
+          </el-row>
+          <el-form-item
+            label="图片"
+          >
+            <el-upload
+              v-if="!imageBase64"
+              class="upload-demo"
+              action=""
+              :on-remove="handleRemove"
+              :before-remove="beforeRemove"
+              accept=".jpg,.png"
+              multiple
+              :limit="1"
+              :on-exceed="handleExceed"
+              :file-list="form.image"
+              :auto-upload="false"
+              :on-change="handleFileChange"
+            >
+              <el-button
+                size="small"
+                type="primary"
+              >点击上传</el-button>
+              <div
+                slot="tip"
+                class="el-upload__tip"
+              >
+                只能上传jpg/png文件，且不超过2M</div>
+            </el-upload>
+            <div v-else>
+
+              <img
+                class="image"
+                :src="imageBase64"
+                alt="门店照片"
+              >
+              <i
+                v-if="isEdit"
+                class="el-icon-refresh"
+                title="修改图片"
+                @click="handleChangeImage"
+              />
+            </div>
+          </el-form-item>
           <el-row>
             <el-form-item
               label="描述"
-              prop="leaveWord"
             >
               <el-input
-                v-model="form.leaveWord"
+                v-model="form.remark"
                 type="textarea"
                 :autosize="{ minRows: 4, maxRows: 8}"
                 placeholder="请输入描述信息"
@@ -200,29 +270,36 @@
 </template>
 
 <script>
-import { postEscapeAdd, getEscapeList, deleteEscapeShop } from "@/api";
-
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 export default {
   name: "Portal",
+
   data() {
     return {
       tableData: [],
       delLoading: false,
       dialogVisible: false, // 对话框显隐
-      dialogTitle: "新增避坑",
+      dialogTitle: "新增数据字典",
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
+      imageBase64: "", // 图片Base64编码
+      searchData: "",
+      searchCityData: "",
       form: {
-        city: "",
+        name: "",
         type: "美食",
-        leaveWord: ""
+        remark: "",
+        parentName: "",
+        level: 3,
+        image: [],
+        city: ""
       },
       rules: {
         city: [
-          { required: true, message: "请输入城市名称", trigger: "blur" }
+          { required: true, message: "请选择类型", trigger: "change" }
         ],
-        leaveWord: [
-          { required: true, message: "请输入说明名称", trigger: "blur" }
+        name: [
+          { required: true, message: "请输入二级类名称", trigger: "blur" }
         ],
         type: [
           { required: true, message: "请选择类型", trigger: "change" }
@@ -230,31 +307,140 @@ export default {
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
-      city: "成都市",
-      options: [{
-        value: "美食",
-        label: "美食"
-      }, {
-        value: "风景",
-        label: "风景"
-      }],
+      filterCityList: [],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 20,
+      tableDataOne: [],
+      filterList: [],
+      filterLists: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          const { data: { id }} = node;
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
+    this.getFilterList();
     this.initTableData();
+    this.getFilterCityListData();
   },
   methods: {
+    /* 搜索数据 */
+    async  handelSearchTableData() {
+      try {
+        this.tableLoading = true;
+        let a;
+        if (this.searchData === "所有") {
+          a = {
+            type: "美食",
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          };
+        } else {
+          a = {
+            type: "美食",
+            parentName: this.searchData,
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          };
+        }
+        const { data: {
+          content, totalElements
+        }} = await getDictFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }, a
+        );
+        this.totalElements = totalElements;
+        this.tableData = content;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+
+    /* 城市数据 */
+    async  getFilterCityListData() {
+      const { data } = await getCityFindPage(this.parentCity);
+      function convertData(data) {
+        return data.map(item => ({
+          value: item.city,
+          id: item.id,
+          label: item.city,
+          level: item.level
+        }));
+      }
+
+      const outputData = convertData(data);
+      this.filterCityList = outputData;
+    },
+    /* 获取筛选条件 */
+    async  getFilterList() {
+      const { data: {
+        content
+      }} = await getDictFind(
+        { pageIndex: 1,
+          pageSize: 10000
+        }, {
+          type: "美食",
+          parentName: "美食",
+          level: 2
+        }
+      );
+      this.filterList = content;
+      const a = [{
+        id: 1,
+        name: "所有"
+      }];
+      this.filterLists = [...a, ...this.filterList];
+    },
+
+    // 编辑
+    handleEdit(row) {
+      this.dialogTitle = "编辑门店信息数据字典";
+      this.isEdit = true;
+      this.canEdit = true;
+      this.dialogVisible = true;
+      const key = Object.keys(row);
+      key.forEach((key) => {
+        if (key === "image") {
+          this.imageBase64 = row[key];
+          this.form.image = [{ name: "图片" }];
+        } else {
+          this.form[key] = row[key];
+        }
+      });
+    },
+    // 获取列表
     async initTableData() {
       try {
         this.tableLoading = true;
         const { data: {
           content, totalElements
-        }} = await getEscapeList(
+        }} = await getDictFind(
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
+          }, {
+            type: "美食",
+            parentName: this.searchData === "所有" ? "" : this.searchData,
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
           }
         );
         this.totalElements = totalElements;
@@ -267,7 +453,6 @@ export default {
     },
     // 分页
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
       this.initTableData();
     },
@@ -277,6 +462,7 @@ export default {
       this.name = "";
       this.city = "";
       this.region = "";
+      this.searchData = "";
       this.initTableData();
     },
     // 点击表格行
@@ -294,8 +480,8 @@ export default {
     },
     // 增加门店-打开对话框
     handleShopAdd(event) {
-      this.dialogTitle = "新增避坑";
-      this.isEdit = true;
+      this.dialogTitle = "新增数据字典";
+      this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
     },
@@ -319,7 +505,7 @@ export default {
         .then(async() => {
           console.log(item);
           try {
-            await deleteEscapeShop(item.id);
+            await deleteDictPit(item.id);
             this.$message.success("删除成功!");
             this.initTableData();
           } catch (error) {
@@ -344,28 +530,29 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.canEdit, this.isEdit);
-      // 查看并且没有编辑
-      if (this.canEdit && !this.isEdit) {
-        this.dialogVisible = false;
-        return;
-      }
+      this.form.type = "美食";
+      this.form.level = 3;
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
             this.addBtnLoading = true;
-
-            // 新增门店
-            if (!this.canEdit) {
-              console.log(this.form);
-              await postEscapeAdd(this.form);
+            console.log(this.form);
+            this.form.city = this.form.city.join("/");
+            const params = {
+              ...this.form,
+              image: this.imageBase64
+            };
+            console.log(params);
+            if (this.canEdit) {
+              await postDictEdit(params); this.$message.success(`编辑成功`);
+            } else {
+              await postDictAdd(params); this.$message.success(`新增成功`);
             }
             this.resetForm();
             this.dialogVisible = false;
-            //   await this.initTableData();
-            this.$message.success(`新增成功`);
+            await this.initTableData();
           } catch (error) {
-            this.$message.warning(`新增失败`);
+            this.$message.error(`新增失败`);
           } finally {
             this.addBtnLoading = false;
           }
@@ -376,7 +563,6 @@ export default {
     },
     // 文件选中
     handleFileChange(file) {
-      console.log(file);
       this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
@@ -395,7 +581,6 @@ export default {
     },
 
     handleRemove(file, fileList) {
-      console.log(file, fileList);
       this.form.image = [];
     },
     handleExceed() {
@@ -415,7 +600,6 @@ export default {
   }
 };
 </script>
-
 <style lang="scss" scoped>
 .portal-container {
   padding: 15px;

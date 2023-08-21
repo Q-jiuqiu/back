@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 12:44:15
+ * @LastEditTime: 2023-07-31 22:48:37
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -14,21 +14,20 @@
 
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-select v-model="city" placeholder="请选择">
-            <el-option
-              v-for="item in cityOption"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true,...props }"
+            clearable
+            placeholder="请选择"
+          />
         </div>
 
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
-          @click="initTableData"
+          @click="handelSearchTableData"
         >搜索</el-button>
         <el-button
           size="medium"
@@ -51,28 +50,41 @@
         v-loading="tableLoading"
         :data="tableData"
         border
-        height="100%"
+        height="calc(100% - 3rem )"
+        row-key="id"
+
+        lazy
+        :load="handelLoadClick"
+        :tree-props="{children: 'childs', hasChildren: 'hasChildren'}"
         @row-click="handleRowClick"
       >
+
         <el-table-column
           prop="city"
           label="城市"
           header-align="center"
           align="left"
+          width="500"
         />
         <el-table-column
           prop="remark"
           label="简介"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"
-          width="150"
+          width="230"
           header-align="center"
           align="center"
         >
           <template slot-scope="scope">
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handleNewAddCity(scope.row)"
+            > 新增</el-button>
             <el-button
               type="text"
               size="small"
@@ -94,6 +106,7 @@
           </template>
         </el-table-column>
       </el-table>
+
     </div>
     <!-- 新增城市推荐 -->
     <el-dialog
@@ -122,14 +135,10 @@
             label="城市"
             prop="city"
           >
-            <el-select v-model="form.city" placeholder="请选择">
-              <el-option
-                v-for="item in cityOption"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
+            <el-input
+              v-model="form.city"
+              placeholder="请输入城市"
+            />
           </el-form-item>
 
           <el-form-item
@@ -182,7 +191,7 @@
             <el-input
               v-model="form.remark"
               type="textarea"
-              autosize
+              :autosize="{ minRows: 4, maxRows: 8}"
               placeholder="请输入描述信息"
               :disabled="!isEdit"
             />
@@ -213,7 +222,7 @@
 </template>
 
 <script>
-import { getTypeCityFind, postCityDict, getCityFind, deleteCityDict, postCityEdit } from "@/api";
+import { postCityDict, getCityFind, deleteCityDict, postCityEdit, getCityFindPage } from "@/api";
 
 export default {
   name: "Recommend",
@@ -246,46 +255,89 @@ export default {
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
-      city: "",
-      cityOption: []
+      city: "成都市",
+      cityOption: [],
+      searchCityData: [],
+      filterCityList: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          let id;
+          if (node.data?.id) {
+            id = node.data.id;
+          } else {
+            id = -1;
+          }
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          console.log(outputData);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
-    this.getQueryCityData();
+    this.initTableData();
   },
   methods: {
-    // 查询城市信息
-    async getQueryCityData() {
-      const { data } = await getTypeCityFind();
-      this.city = data[0];
-      data.forEach(item => {
-        this.cityOption.push({
-          value: item,
-          label: item
-        });
-      });
-      this.initTableData();
+    // 搜索数据
+    async handelSearchTableData() {
+      const data = await getCityFind(this.searchCityData[ this.searchCityData.length - 1]);
+      this.tableData = data;
     },
-
+    /* 城市数据 */
+    getFilterCityListData(data) {
+      return data.map(item => ({
+        value: item.city,
+        id: item.id,
+        label: item.city,
+        level: item.level
+      }));
+    },
     // 查询描述列表
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getCityFind(
-          this.city
-        );
-        if (data === null) {
-          this.tableData = [];
-        } else {
-          this.tableData = [data];
-        }
+        const { data } = await getCityFindPage(this.parentCity);
+        const newData = data.map(item => ({ ...item, hasChildren: true }));
+        this.tableData = newData;
+
+        const outputData = this.getFilterCityListData(data);
+        this.filterCityList = outputData;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-
+    // 查询下级
+    async handelLoadClick(tree, treeNode, resolve) {
+      const { data } = await getCityFindPage(tree.id);
+      const newData = data.map(item => {
+        if (item.level !== "3") {
+          return ({ ...item, hasChildren: true });
+        } else {
+          return { ...item };
+        }
+      });
+      console.log(data, newData);
+      resolve(newData);
+    },
+    // 新增城市下级
+    async handleNewAddCity(row) {
+      console.log(row);
+      this.dialogVisible = true;
+      this.parentCity = row.id;
+    },
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
@@ -313,6 +365,7 @@ export default {
       this.dissolveFocus(event);
       this.form.images = [];
       this.dialogVisible = true;
+      this.parentCity = -1;
     },
     // 关闭对话
     handleDialogClose(done) {
@@ -384,6 +437,7 @@ export default {
       this.form.city = row.city;
       this.form.id = row.id;
       this.form.remark = row.remark;
+      this.form.parentCity = row.parentCity;
     },
     // 编辑
     handleFormEdit() {
@@ -412,15 +466,19 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            const params = {
-              ...this.form
-            };
-            console.log(params);
+
             // 新增城市
             if (!this.canEdit) {
+              const params = {
+                ...this.form,
+                parentCity: this.parentCity
+              };
               await postCityDict(params);
               this.resetForm();
             } else if (this.canEdit && this.isEdit) {
+              const params = {
+                ...this.form
+              };
               await postCityEdit(params);
             }
             this.dialogVisible = false;

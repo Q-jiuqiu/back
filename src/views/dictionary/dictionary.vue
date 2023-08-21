@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 13:48:04
+ * @LastEditTime: 2023-07-20 19:16:04
 -->
 <!--
  * @Author: quling
@@ -19,11 +19,16 @@
       <div class="search">
 
         <div class="search-item">
-          <div class="label">城市:</div>
-          <el-input
-            v-model="city"
-            placeholder="搜索城市"
-          />
+          <div class="label">分类:</div>
+          <el-select v-model="searchCityData" clearable placeholder="请选择">
+            <el-option
+              v-for="item in filterCityList"
+              :key="item.value"
+              :label="item.value"
+              :value="item.value"
+            />
+          </el-select>
+
         </div>
 
         <el-button
@@ -57,26 +62,19 @@
         @row-click="handleRowClick"
       >
         <el-table-column
-          prop="type"
-          label="大类"
+          prop="parentName"
+          label="一级类"
           header-align="center"
-          align="left"
+          align="center"
         />
         <el-table-column
           prop="name"
-          label="小类"
+          label="二级类"
           header-align="center"
-          align="left"
-        />
-        <el-table-column
-          prop="remark"
-          label="描述"
-          header-align="center"
-          align="left"
+          align="center"
         />
         <el-table-column
           label="操作"
-          width="150"
           header-align="center"
           align="center"
         >
@@ -127,21 +125,23 @@
           :rules="rules"
           :model="form"
           label-width="80px"
-        ><el-row>
-           <el-form-item
-             label="大类"
-             prop="type"
-           >
-             <el-select v-model="form.type" clearable placeholder="请选择">
-               <el-option
-                 v-for="item in options"
-                 :key="item.value"
-                 :label="item.label"
-                 :value="item.value"
-               />
-             </el-select>
-           </el-form-item>
-         </el-row>
+        >
+
+          <el-row>
+            <el-form-item
+              label="大类"
+              prop="parentName"
+            >
+              <el-select v-model="form.parentName" clearable placeholder="请选择">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-row>
           <el-row>
             <el-form-item
               label="小类"
@@ -151,62 +151,6 @@
                 v-model="form.name"
                 placeholder="请输入类型"
                 style="width: 100%;"
-              />
-            </el-form-item>
-          </el-row>
-          <el-form-item
-            label="图片"
-            prop="image"
-          >
-            <el-upload
-              v-if="!imageBase64"
-              class="upload-demo"
-              action=""
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
-              accept=".jpg,.png"
-              multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-            >
-              <el-button
-                size="small"
-                type="primary"
-              >点击上传</el-button>
-              <div
-                slot="tip"
-                class="el-upload__tip"
-              >
-                只能上传jpg/png文件，且不超过2M</div>
-            </el-upload>
-            <div v-else>
-
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="门店照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
-          </el-form-item>
-          <el-row>
-            <el-form-item
-              label="描述"
-              prop="remark"
-            >
-              <el-input
-                v-model="form.remark"
-                type="textarea"
-                autosize
-                placeholder="请输入描述信息"
               />
             </el-form-item>
           </el-row>
@@ -238,7 +182,7 @@
 </template>
 
 <script>
-import { postDictAdd, getDictFind, deleteDictPit, postDictEdit } from "@/api";
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 
 export default {
   name: "Portal",
@@ -253,27 +197,24 @@ export default {
       imageBase64: "", // 图片Base64编码
       form: {
         name: "",
+        parentName: "美食",
         type: "美食",
-        remark: "",
-        image: []
+        level: 2
       },
       rules: {
         name: [
-          { required: true, message: "请输入城市名称", trigger: "blur" }
+          { required: true, message: "请输入名称", trigger: "blur" }
         ],
-        remark: [
-          { required: true, message: "请输入说明名称", trigger: "blur" }
-        ],
-        type: [
+        parentName: [
           { required: true, message: "请选择类型", trigger: "change" }
-        ],
-        image: [
-          { required: true, message: "请上传图片", trigger: "blur" }
         ]
+        /*  city: [
+          { required: true, message: "请选择类型", trigger: "change" }
+        ] */
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
-      city: "成都市",
+      searchCityData: "美食",
       options: [
         {
           value: "美食",
@@ -286,7 +227,15 @@ export default {
       ],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10
+      pageSize: 10,
+      filterCityList: [{
+        value: "美食",
+        label: "美食"
+      },
+      {
+        value: "风景",
+        label: "风景"
+      }]
     };
   },
   mounted() {
@@ -299,24 +248,10 @@ export default {
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
-      console.log(row);
-      //  const { name, type, remark, id, image } = row;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
-        }
+        this.form[key] = row[key];
       });
-      /* this.form = {
-        name,
-        type,
-        remark,
-        id,
-        image
-      }; */
     },
     // 获取列表
     async initTableData() {
@@ -327,6 +262,9 @@ export default {
         }} = await getDictFind(
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
+          }, {
+            level: 2,
+            type: this.searchCityData
           }
         );
         this.totalElements = totalElements;
@@ -339,7 +277,6 @@ export default {
     },
     // 分页
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
       this.initTableData();
     },
@@ -347,13 +284,12 @@ export default {
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
-      this.city = "";
+      this.searchCityData = "";
       this.region = "";
       this.initTableData();
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -421,19 +357,11 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            console.log(this.canEdit);
-            const { name, remark, type, id } = this.form;
-            const data = {
-              name,
-              remark,
-              type,
-              image: this.imageBase64,
-              id
-            };
+            this.form.type = this.form.parentName;
             if (this.canEdit) {
-              await postDictEdit(data);
+              await postDictEdit(this.form);
             } else {
-              await postDictAdd(data);
+              await postDictAdd(this.form);
             }
             this.resetForm();
             this.dialogVisible = false;
@@ -448,45 +376,6 @@ export default {
           return false;
         }
       });
-    },
-    // 文件选中
-    handleFileChange(file) {
-      console.log(file);
-      this.form.image = [file];
-      // 检验选择文件格式
-      const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
-      if (!imageList.includes(fileType)) {
-        alert("文件格式不正确");
-        return false;
-      }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
-        this.$refs.form.validate();
-        console.log(this.imageBase64);
-      };
-    },
-
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
-      this.form.image = [];
-    },
-    handleExceed() {
-      this.$message.warning(`当前限制选择 1 个文件`);
-    },
-    beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消"
-      });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
     }
   }
 };

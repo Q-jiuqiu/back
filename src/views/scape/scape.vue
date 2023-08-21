@@ -2,7 +2,8 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-10 14:05:40
+ * @LastEditTime: 2023-08-01 19:12:56
+ * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
 <template>
@@ -27,6 +28,7 @@
             placeholder="请选择"
           />
         </div>
+
         <el-button
           type="primary"
           size="medium"
@@ -39,13 +41,12 @@
           @click="handleFilterReset"
         >重置</el-button>
       </div>
-
       <el-button
         type="primary"
         size="medium"
         @click="handleShopAdd"
       >
-        新增门店
+        新增景区
       </el-button>
     </div>
     <!-- 表格 -->
@@ -60,21 +61,12 @@
       >
         <el-table-column
           prop="secondType"
-          label="大类"
+          label="分类"
           width="100"
           header-align="center"
           :show-overflow-tooltip="true"
           align="center"
         />
-        <el-table-column
-          prop="threeType"
-          label=" 小类"
-          width="100"
-          header-align="center"
-          :show-overflow-tooltip="true"
-          align="center"
-        />
-
         <el-table-column
           prop="name"
           label="名称"
@@ -142,7 +134,6 @@
         background
         :page-size="pageSize"
         :page-count="pageIndex"
-        :current-page="pageIndex"
         layout="prev, pager, next"
         :total="totalElements"
         style="display: flex;
@@ -151,11 +142,11 @@
         @current-change="handelCurrentPage"
       />
     </div>
-    <!-- 新增门店 -->
+    <!-- 新增景区 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
-      width="50%"
+      width="70%"
     >
       <span
         slot="title"
@@ -172,12 +163,12 @@
           label-width="80px"
         >
           <el-form-item
-            label="门店名称"
+            label="景区名称"
             prop="name"
           >
             <el-input
               v-model="form.name"
-              placeholder="请输入门店名称"
+              placeholder="请输入景区名称"
               :disabled="canEdit && !isEdit "
             />
           </el-form-item>
@@ -185,31 +176,27 @@
             <el-col :span="12">
               <el-form-item
                 label="地址"
-                prop="addr"
               >
                 <el-input
                   v-model="form.addr"
-                  placeholder="请输入门店地址"
+                  placeholder="请输入景区地址"
                   :disabled="canEdit && !isEdit "
                 />
-
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item
                 label="营业时间"
-                prop="workTime"
               >
 
                 <el-input
                   v-model="form.workTime"
-                  placeholder="请输入门店营业时间"
+                  placeholder="请输入景区营业时间"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
           </el-row>
-
           <el-row>
             <el-col :span="12">
               <el-form-item
@@ -228,9 +215,14 @@
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="热度"
+                label="景区等级"
               >
-                <el-input-number v-model="form.heat" style="width: 100%;" :min="1" :max="100" label="热度" />
+                <el-input
+                  v-model="form.threeType"
+                  style="width: 100%;"
+                  placeholder="请输入景区等级"
+                  :disabled="canEdit && !isEdit "
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -265,9 +257,9 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="大类"
+                label="二级分类"
               >
-                <el-select v-model="form.secondType" style="width: 100%;" clearable placeholder="请选择" @change="handelSecondTypeChange">
+                <el-select v-model="form.secondType" style="width: 100%;" clearable placeholder="请选择">
                   <el-option
                     v-for="item in options2"
                     :key="item.value"
@@ -279,22 +271,10 @@
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="小类"
+                label="热度"
+                :disabled="canEdit && !isEdit "
               >
-                <el-select
-                  v-model="form.threeType"
-                  style="width: 100%;"
-                  clearable
-                  placeholder="请选择"
-                  @change="handelThreeTypeChange"
-                >
-                  <el-option
-                    v-for="item in options3"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
+                <el-input-number v-model="form.heat" style="width: 100%;" :min="1" :max="100" label="热度" />
               </el-form-item>
             </el-col>
 
@@ -331,7 +311,7 @@
               <img
                 class="image"
                 :src="imageBase64"
-                alt="门店照片"
+                alt="景区照片"
               >
               <i
                 v-if="isEdit"
@@ -403,7 +383,7 @@ export default {
       tableData: [],
       delLoading: false,
       dialogVisible: false, // 对话框显隐
-      dialogTitle: "新增门店",
+      dialogTitle: "新增景区",
       dialogImageUrl: "", // 图片预览地址
       hasImg: false, // 是否有图片
       picture: null, // 图片-文件
@@ -412,21 +392,21 @@ export default {
       form: {
         name: "",
         addr: "",
-        city: [],
+        city: "",
         latitude: "",
         longitude: "",
         image: [],
         remark: "",
-        type: "美食",
+        type: "风景",
         secondType: "",
-        threeType: "",
         heat: 100,
-        workTime: "9:00-22:00"
+        workTime: "9:00-18:00",
+        threeType: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
         name: [
-          { required: true, message: "请输入门店名称", trigger: "blur" }
+          { required: true, message: "请输入景区名称", trigger: "blur" }
         ],
         city: [
           { required: true, message: "请输入城市名称", trigger: "blur" }
@@ -440,18 +420,26 @@ export default {
           { validator: validateLatitude, trigger: "blur" }
         ]
       },
-      addBtnLoading: false, // 添加门店loading
+      addBtnLoading: false, // 添加景区loading
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
       // 搜索关键字
       name: "",
       city: "",
+      options1: [
+        {
+          value: "美食",
+          label: "美食"
+        },
+        {
+          value: "风景",
+          label: "风景"
+        }
+      ],
       totalElements: 0,
       pageIndex: 1,
-      pageCurrent: 1,
       pageSize: 10,
       options2: [],
-      options3: [],
       filterCityList: [],
       searchCityData: [],
       parentCity: -1, // 父级城市id
@@ -470,6 +458,7 @@ export default {
             }));
           }
           const outputData = convertData(data);
+          console.log(outputData);
           resolve(outputData);
         } }
     };
@@ -477,7 +466,7 @@ export default {
   mounted() {
     this.initTableData();
     this.handelSecondType();
-    this.getFilterCityListData(this.parentCity);
+    this.getFilterCityListData();
   },
   methods: {
     /* 搜索数据 */
@@ -485,106 +474,14 @@ export default {
       try {
         this.tableLoading = true;
         const res = {
-          type: "美食"
+          type: "风景"
         };
         if (this.name !== null && this.name !== "") {
           res.name = this.name;
         }
         if (this.searchCityData.length) {
           res.city = this.searchCityData[ this.searchCityData.length - 1];
-          this.city = this.searchCityData[ this.searchCityData.length - 1];
         }
-        this.pageIndex = 1;
-        const { data } = await getList(
-          res,
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }
-        );
-        this.pageCurrent = 1;
-        this.tableData = data.content;
-        this.totalElements = data.totalElements;
-        console.log("搜索", this.pageIndex, this.totalElements);
-      } catch (error) {
-        this.$message.warning("获取数据失败");
-      } finally {
-        this.tableLoading = false;
-      }
-    },
-    /* 城市数据 */
-    async  getFilterCityListData(parentCity) {
-      const { data } = await getCityFindPage(parentCity);
-      function convertData(data) {
-        return data.map(item => ({
-          value: item.city,
-          label: item.city,
-          id: item.id,
-          children: item.childs ? convertData(item.childs) : []
-        }));
-      }
-      const outputData = convertData(data);
-      this.filterCityList = outputData;
-    },
-    // 获取二级分类
-    async handelSecondType() {
-      this.options2 = [];
-      const page = {
-        pageIndex: 1,
-        pageSize: 1000
-      };
-      const param = {
-        type: "美食",
-        level: 2
-      };
-      const { data: {
-        content
-      }} = await getDictFind(page, param);
-      content.forEach(item => {
-        this.options2.push({
-          value: item.name,
-          label: item.name
-        });
-      });
-    },
-    handelThreeTypeChange(value) {
-      this.form.threeType = value;
-    },
-    async handelSecondTypeChange(value) {
-      this.options3 = [];
-      this.form.secondType = value;
-      const page = {
-        pageIndex: 1,
-        pageSize: 1000
-      };
-      const param = {
-        type: "美食",
-        parentName: this.form.secondType,
-        city: this.form.city[this.form.city.length - 1],
-        level: 3
-      };
-      const { data: {
-        content
-      }} = await getDictFind(page, param);
-      content.forEach(item => {
-        this.options3.push({
-          value: item.name,
-          label: item.name
-        });
-      });
-    },
-    async initTableData() {
-      try {
-        this.tableLoading = true;
-        const res = {
-          type: "美食"
-        };
-        if (this.name !== null && this.name !== "") {
-          res.name = this.name;
-        }
-        if (this.city !== null && this.city !== "") {
-          res.city = this.city;
-        }
-        console.log("刷新", this.pageIndex);
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
@@ -600,20 +497,85 @@ export default {
         this.tableLoading = false;
       }
     },
+    /* 城市数据 */
+    async  getFilterCityListData() {
+      const { data } = await getCityFindPage(this.parentCity);
+      function convertData(data) {
+        return data.map(item => ({
+          value: item.city,
+          label: item.city,
+          id: item.id,
+          children: item.childs ? convertData(item.childs) : []
+        }));
+      }
+
+      const outputData = convertData(data);
+      console.log(outputData);
+      this.filterCityList = outputData;
+    },
+    // 获取二级分类
+    async handelSecondType() {
+      this.options2 = [];
+      const { data: {
+        content
+      }} = await getDictFind({
+        pageIndex: 1,
+        pageSize: 1000
+      }, { type: "风景",
+        level: 2 });
+      content.forEach(item => {
+        this.options2.push({
+          value: item.name,
+          label: item.name
+        });
+      });
+    },
+    async initTableData() {
+      try {
+        this.tableLoading = true;
+        const res = {
+          type: "风景"
+        };
+        if (this.name !== null && this.name !== "") {
+          res.name = this.name;
+        }
+        if (this.city !== null && this.city !== "") {
+          res.city = this.city;
+        }
+        if (this.region !== null && this.region !== "") {
+          res.region = this.region;
+        }
+        const { data } = await getList(
+          res,
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }
+        );
+        console.log(data);
+        this.totalElements = data.totalElements;
+        this.tableData = data.content;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
     // 分页
     handelCurrentPage(index) {
+      console.log(index);
       this.pageIndex = index;
-      console.log("点击分页", this.pageIndex);
       this.initTableData();
     },
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
       this.city = "";
+      this.region = "";
       this.initTableData();
     },
     // 点击表格行
     handleRowClick(row) {
+      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -624,13 +586,13 @@ export default {
       }
       target.blur();
     },
-    // 增加门店-打开对话框
+    // 增加景区-打开对话框
     handleShopAdd(event) {
-      this.dialogTitle = "新增门店";
       this.isEdit = false;
       this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
+      this.dialogTitle = "新增景区";
     },
     // 关闭对话
     handleDialogClose(done) {
@@ -642,9 +604,9 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除门店
+    // 删除景区
     handleShopDel(item) {
-      this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
+      this.$confirm("此操作将永久删除选中景区, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning"
@@ -683,8 +645,9 @@ export default {
       });
     },
     // 编辑
-    async handleEdit(row) {
-      this.dialogTitle = "编辑门店信息";
+    async  handleEdit(row) {
+      console.log(row);
+      this.dialogTitle = "编辑景区信息";
       this.isEdit = true;
       this.canEdit = false;
       this.dialogVisible = true;
@@ -697,26 +660,12 @@ export default {
           this.form[key] = row[key];
         }
       });
-      this.form.city = this.form.city.split("/");
-
-      console.log(this.form.city);
-      /*   this.filterCityList.forEach(async item => {
-        if (item.value === this.form.city[0]) {
-          const { data } = await getCityFindPage(item.id);
-          const children = data.map(item => ({
-            value: item.city,
-            label: item.city,
-            id: item.id
-          }));
-          item.children = children;
-        }
-      }); */
       const page = {
         pageIndex: 1,
         pageSize: 1000
       };
       const param = {
-        type: "美食",
+        type: "风景",
         parentName: this.form.secondType,
         level: 3
       };
@@ -730,6 +679,7 @@ export default {
         });
       });
     },
+
     // 重置表单
     resetForm() {
       for (const key in this.form) {
@@ -741,13 +691,49 @@ export default {
     },
     // 提交表单
     handleFormConfirm() {
-      console.log(this.form.city);
       // 查看并且没有编辑
       if (this.canEdit && !this.isEdit) {
         this.dialogVisible = false;
         return;
       }
-      this.form.type = "美食";
+      this.form.type = "风景";
+      this.$refs.form.validate(async(valid) => {
+        if (valid) {
+          try {
+            this.addBtnLoading = true;
+            this.form.city = this.form.city.join("/");
+            const params = {
+              ...this.form,
+              image: this.imageBase64
+            };
+            if (!this.canEdit && !this.isEdit) {
+              await addShop(params);
+            } else if (!this.canEdit && this.isEdit) {
+              await editShop(params);
+            }
+            this.resetForm();
+            this.dialogVisible = false;
+            await this.initTableData();
+          } catch (error) {
+            if (!this.canEdit) {
+              this.$message.warning(`新增失败`);
+            } else if (this.canEdit && this.isEdit) {
+              this.$message.warning(`修改失败`);
+            }
+          } finally {
+            this.addBtnLoading = false;
+          }
+        } else {
+          return false;
+        }
+      });
+    /*   console.log(this.canEdit, this.isEdit);
+      // 查看并且没有编辑
+      if (this.canEdit && !this.isEdit) {
+        this.dialogVisible = false;
+        return;
+      }
+      this.form.type = "风景";
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
@@ -779,7 +765,7 @@ export default {
         } else {
           return false;
         }
-      });
+      }); */
     },
     // 文件选中
     handleFileChange(file) {

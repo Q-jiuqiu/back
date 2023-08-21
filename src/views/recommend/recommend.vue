@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-09 21:01:21
+ * @LastEditTime: 2023-07-03 15:43:48
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -36,7 +36,7 @@
         </div>
         <div class="search-item">
           <div class="label">名称:</div>
-          <el-select v-model="form.name" placeholder="请选择" @change="handelNameChange">
+          <el-select v-model="form.name" filterable placeholder="请选择" @change="handelNameChange">
             <el-option
               v-for="item in nameOptions"
               :key="item.id"
@@ -89,6 +89,7 @@
           label="简介"
           header-align="center"
           align="left"
+          :show-overflow-tooltip="true"
         />
         <el-table-column
           label="操作"
@@ -118,6 +119,7 @@
           </template>
         </el-table-column>
       </el-table>
+
     </div>
     <!-- 新增门店推荐 -->
     <el-dialog
@@ -203,7 +205,7 @@
             <el-input
               v-model="form.describe"
               type="textarea"
-              autosize
+              :autosize="{ minRows: 4, maxRows: 8}"
               placeholder="请输入描述信息"
               :disabled="!isEdit"
             />
@@ -328,10 +330,12 @@ export default {
           city: city
         },
         { pageIndex: 1,
-          pageSize: 100
+          pageSize: 10000
         }
       );
+      this.form.name = data.content[0].id;
       this.nameOptions = data.content;
+      this.initTableData();
     },
     handelNameChange(value) {
       console.log(value);
@@ -339,7 +343,7 @@ export default {
       this.initTableData();
     },
     // 查询描述列表
-    async initTableData() {
+    async initTableData(id = this.form.name) {
       try {
         this.tableLoading = true;
         const { data } = await getRecommendFind(
@@ -485,9 +489,10 @@ export default {
               console.log(111);
               await postRecommendEdit(params);
             }
+
+            await this.initTableData(this.form.name);
             this.resetForm();
             this.dialogVisible = false;
-            await this.initTableData();
           } catch (error) {
             if (!this.canEdit) {
               this.$message.warning(`新增失败`);

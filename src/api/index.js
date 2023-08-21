@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-09 21:47:29
+ * @LastEditTime: 2023-07-31 19:18:41
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -11,7 +11,7 @@ import request from "@/utils/request";
 // 获取门店数据列表
 export function getList(params, page) {
   return request({
-    url: `pro/rest/dbs/find/${page.pageIndex}/${page.pageSize}`,
+    url: `/pro/rest/dbs/find/${page.pageIndex}/${page.pageSize}`,
     method: "get",
     params
   });
@@ -74,15 +74,16 @@ export function getFindLeaveList(page) {
 // 删除留言信息
 export function deleteEscapePit(id) {
   return request({
-    url: `/pro/rest/dbs/delete/escape/pit/${id}`,
+    url: `/pro/rest/dbs/delete/leave/word/${id}`,
     method: "delete"
   });
 }
 // 获取数据字典数据列表
-export function getDictFind(page) {
+export function getDictFind(page, params) {
   return request({
-    url: `/pro/rest/dbs/find/dict/${page.pageIndex}/${page.pageSize}`,
-    method: "get"
+    url: `/pro/rest/dbs/find/dict/one/${page.pageIndex}/${page.pageSize}`,
+    method: "get",
+    params
   });
 }
 // 新增数据字典数据
@@ -168,6 +169,13 @@ export function getCityFind(city) {
     method: "get"
   });
 }
+// 查询城市分页
+export function getCityFindPage(id) {
+  return request({
+    url: `/pro/rest/dbs/city/dict/find/tree/${id}`,
+    method: "get"
+  });
+}
 // 删除城市
 export function deleteCityDict(id) {
   return request({
@@ -181,5 +189,19 @@ export function postCityEdit(params) {
     url: `/pro/rest/dbs/city/dict/edit`,
     method: "post",
     data: params
+  });
+}
+// 获取评价
+export function getCommentById({ id, pageIndex, pageSize }) {
+  return request({
+    url: `/pro/rest/dbs/find/comment/${id}/${pageIndex}/${pageSize}`,
+    method: "get"
+  });
+}
+// 删除评价
+export function deleteComment(id) {
+  return request({
+    url: `/pro/rest/dbs/delete/comment/${id}`,
+    method: "delete"
   });
 }
