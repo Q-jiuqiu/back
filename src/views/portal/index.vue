@@ -2,8 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-20 20:46:31
- * @Description: 首页
+ * @LastEditTime: 2023-06-10 14:05:40
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
 <template>
