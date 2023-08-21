@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-02 17:51:11
+ * @LastEditTime: 2023-08-14 16:30:21
 -->
 <template>
   <div class="portal-container">
@@ -24,7 +24,7 @@
           <div class="label">分类:</div>
           <el-select v-model="searchData" placeholder="选择分类">
             <el-option
-              v-for="item in filterList"
+              v-for="item in filterLists"
               :key="item.id"
               :label="item.name"
               :value="item.name"
@@ -283,7 +283,7 @@ export default {
       canEdit: false, // 能否编辑 是否显示编辑图标
       isEdit: true, // 是否编辑
       imageBase64: "", // 图片Base64编码
-      searchData: "小吃类",
+      searchData: "",
       searchCityData: "",
       form: {
         name: "",
@@ -312,6 +312,8 @@ export default {
       pageIndex: 1,
       pageSize: 20,
       tableDataOne: [],
+      filterList: [],
+      filterLists: [],
       parentCity: -1, // 父级城市id
       props: {
         lazy: true,
@@ -328,7 +330,6 @@ export default {
             }));
           }
           const outputData = convertData(data);
-          console.log(outputData);
           resolve(outputData);
         } }
     };
@@ -343,17 +344,27 @@ export default {
     async  handelSearchTableData() {
       try {
         this.tableLoading = true;
+        let a;
+        if (this.searchData === "所有") {
+          a = {
+            type: "美食",
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          };
+        } else {
+          a = {
+            type: "美食",
+            parentName: this.searchData,
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          };
+        }
         const { data: {
           content, totalElements
         }} = await getDictFind(
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
-          }, {
-            type: "美食",
-            parentName: this.searchData,
-            level: 3,
-            city: this.searchCityData[ this.searchCityData.length - 1]
-          }
+          }, a
         );
         this.totalElements = totalElements;
         this.tableData = content;
@@ -393,6 +404,11 @@ export default {
         }
       );
       this.filterList = content;
+      const a = [{
+        id: 1,
+        name: "所有"
+      }];
+      this.filterLists = [...a, ...this.filterList];
     },
 
     // 编辑
@@ -422,7 +438,7 @@ export default {
             pageSize: this.pageSize
           }, {
             type: "美食",
-            parentName: this.searchData,
+            parentName: this.searchData === "所有" ? "" : this.searchData,
             level: 3,
             city: this.searchCityData[ this.searchCityData.length - 1]
           }

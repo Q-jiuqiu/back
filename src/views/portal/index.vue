@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-01 19:10:30
+ * @LastEditTime: 2023-08-20 20:46:31
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -28,7 +28,6 @@
             placeholder="请选择"
           />
         </div>
-
         <el-button
           type="primary"
           size="medium"
@@ -144,6 +143,7 @@
         background
         :page-size="pageSize"
         :page-count="pageIndex"
+        :current-page="pageIndex"
         layout="prev, pager, next"
         :total="totalElements"
         style="display: flex;
@@ -449,6 +449,7 @@ export default {
       city: "",
       totalElements: 0,
       pageIndex: 1,
+      pageCurrent: 1,
       pageSize: 10,
       options2: [],
       options3: [],
@@ -492,16 +493,19 @@ export default {
         }
         if (this.searchCityData.length) {
           res.city = this.searchCityData[ this.searchCityData.length - 1];
+          this.city = this.searchCityData[ this.searchCityData.length - 1];
         }
+        this.pageIndex = 1;
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
           }
         );
-
+        this.pageCurrent = 1;
         this.tableData = data.content;
         this.totalElements = data.totalElements;
+        console.log("搜索", this.pageIndex, this.totalElements);
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
@@ -548,7 +552,6 @@ export default {
     },
     async handelSecondTypeChange(value) {
       this.options3 = [];
-      console.log(value);
       this.form.secondType = value;
       const page = {
         pageIndex: 1,
@@ -557,6 +560,7 @@ export default {
       const param = {
         type: "美食",
         parentName: this.form.secondType,
+        city: this.form.city[this.form.city.length - 1],
         level: 3
       };
       const { data: {
@@ -581,7 +585,7 @@ export default {
         if (this.city !== null && this.city !== "") {
           res.city = this.city;
         }
-
+        console.log("刷新", this.pageIndex);
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
@@ -600,6 +604,7 @@ export default {
     // 分页
     handelCurrentPage(index) {
       this.pageIndex = index;
+      console.log("点击分页", this.pageIndex);
       this.initTableData();
     },
     // 重置搜索条件
