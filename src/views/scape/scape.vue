@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-01 19:12:56
+ * @LastEditTime: 2023-08-21 20:20:35
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -28,7 +28,17 @@
             placeholder="请选择"
           />
         </div>
-
+        <div class="search-item">
+          <div class="label">分类:</div>
+          <el-select v-model="classification" style="width: 100%;" clearable placeholder="请选择">
+            <el-option
+              v-for="item in options2"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
         <el-button
           type="primary"
           size="medium"
@@ -279,6 +289,26 @@
             </el-col>
 
           </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="是否免费"
+              >
+                <el-radio-group v-model="form.free">
+                  <el-radio :label="false">免费</el-radio>
+                  <el-radio :label="true">收费</el-radio>
+                </el-radio-group>
+              </el-form-item>
+            </el-col>
+            <el-col v-if="form.free" :span="12">
+              <el-form-item
+                label="价格"
+                :disabled="canEdit && !isEdit "
+              >
+                <el-input v-model="form.price" placeholder="请输入价格" />
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-form-item
             label="图片"
           >
@@ -320,6 +350,17 @@
                 @click="handleChangeImage"
               />
             </div>
+          </el-form-item>
+          <el-form-item
+            label="简介"
+          >
+            <el-input
+              v-model="form.introduction"
+              :autosize="{ minRows: 2, maxRows: 8}"
+              type="textarea"
+              placeholder="请输入简介信息"
+              :disabled="canEdit && !isEdit "
+            />
           </el-form-item>
           <el-form-item
             label="描述"
@@ -401,7 +442,10 @@ export default {
         secondType: "",
         heat: 100,
         workTime: "9:00-18:00",
-        threeType: ""
+        threeType: "",
+        introduction: "",
+        price: "",
+        free: true
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -460,7 +504,8 @@ export default {
           const outputData = convertData(data);
           console.log(outputData);
           resolve(outputData);
-        } }
+        } },
+      classification: ""
     };
   },
   mounted() {
@@ -471,6 +516,7 @@ export default {
   methods: {
     /* 搜索数据 */
     async  handelSearchTableData() {
+      console.log(this.classification);
       try {
         this.tableLoading = true;
         const res = {

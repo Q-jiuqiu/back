@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-20 20:46:31
+ * @LastEditTime: 2023-08-24 20:24:51
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -11,13 +11,6 @@
     <!-- 操作按钮 -->
     <div class="operation">
       <div class="search">
-        <div class="search-item">
-          <div class="label">名称:</div>
-          <el-input
-            v-model="name"
-            placeholder="搜索店铺名称"
-          />
-        </div>
         <div class="search-item">
           <div class="label">城市:</div>
           <el-cascader
@@ -28,17 +21,53 @@
             placeholder="请选择"
           />
         </div>
+        <div class="search-item">
+          <div class="label">大类:</div>
+          <el-select
+            v-model="searchMainClass"
+            clearable
+            placeholder="请选择"
+          >
+            <el-option
+              v-for="item in mainClass"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+        <div class="search-item">
+          <div class="label">小类:</div>
+          <el-select
+            v-model="searchSmallClass"
+            clearable
+            placeholder="请选择"
+            loading-text="小类加载中..."
+            :loading="loadingSmallClass"
+            @visible-change="handelSearchSmallClassVisible"
+          >
+            <el-option
+              v-for="item in smallClass"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
+        <div class="search-item">
+          <div class="label">名称:</div>
+          <el-input
+            v-model="searchName"
+            placeholder="搜索店铺名称"
+          />
+        </div>
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
           @click="handelSearchTableData"
         >搜索</el-button>
-        <el-button
-          size="medium"
-          icon="el-icon-search"
-          @click="handleFilterReset"
-        >重置</el-button>
+
       </div>
 
       <el-button
@@ -57,8 +86,22 @@
         :data="tableData"
         border
         height="calc(100% - 3rem )"
-        @row-click="handleRowClick"
       >
+        <el-table-column
+          label="序号"
+          type="index"
+          header-align="center"
+          align="center"
+          width="50"
+        />
+        <el-table-column
+          prop="name"
+          label="名称"
+          width="220"
+          header-align="center"
+          :show-overflow-tooltip="true"
+          align="center"
+        />
         <el-table-column
           prop="secondType"
           label="大类"
@@ -75,45 +118,38 @@
           :show-overflow-tooltip="true"
           align="center"
         />
-
         <el-table-column
-          prop="name"
-          label="名称"
-          header-align="center"
+          prop="capitaConsumption"
+          label="人均消费"
+          width="100"
           :show-overflow-tooltip="true"
+          header-align="center"
           align="center"
         />
         <el-table-column
-          prop="province"
-          width="180"
-          label="经纬度"
+          prop="queue"
+          width="150"
+          label="排队情况"
           header-align="center"
           align="center"
-        >
-          <template slot-scope="scope">
-            (
-            {{ scope&&scope.row.longitude }} ,
-            {{ scope&&scope.row.latitude }})
-          </template>
-        </el-table-column>
+        />
         <el-table-column
-          prop="addr"
-          label="地址"
+          prop="environment"
+          width="200"
+          label="环境情况"
+          header-align="center"
+          align="center"
+        />
+        <el-table-column
+          prop="introduction"
+          label="简介"
           :show-overflow-tooltip="true"
           header-align="center"
           align="left"
         />
-        <el-table-column
-          prop="remark"
-          label="描述"
-          :show-overflow-tooltip="true"
-          header-align="center"
-          align="left"
-        />
-
         <el-table-column
           label="操作"
-          width="150"
+          width="200"
           header-align="center"
           align="center"
         >
@@ -121,8 +157,23 @@
             <el-button
               type="text"
               size="small"
+              @click.stop="handelExploreShop(scope.row)"
+            >探店</el-button>
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handelRecommendAdd(scope.row)"
+            >推荐</el-button>
+            <el-button
+              type="text"
+              size="small"
               @click.stop="handlePreview(scope.row)"
             >查看</el-button>
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handelComment(scope.row)"
+            >评论</el-button>
             <el-button
               type="text"
               size="small"
@@ -152,11 +203,32 @@
         @current-change="handelCurrentPage"
       />
     </div>
+    <!-- 推荐菜品 -->
+    <el-dialog
+      width="40%"
+      title="门店菜品推荐"
+      :visible.sync="innerVisible"
+      append-to-body
+    ><Recommend :food-id="shopId" /></el-dialog>
+    <!-- 探店 -->
+    <el-dialog
+      width="40%"
+      title="探店"
+      :visible.sync="exploreShopInner"
+      append-to-body
+    ><ExploreShop :explore-id="exploreId" /></el-dialog>
+    <!-- 评论 -->
+    <el-dialog
+      width="40%"
+      title="评论列表"
+      :visible.sync="commentInner"
+      append-to-body
+    ><Comment :comment-id="commentId" /></el-dialog>
     <!-- 新增门店 -->
     <el-dialog
       :visible.sync="dialogVisible"
       :before-close="handleDialogClose"
-      width="50%"
+      width="70%"
     >
       <span
         slot="title"
@@ -172,16 +244,33 @@
           :model="form"
           label-width="80px"
         >
-          <el-form-item
-            label="门店名称"
-            prop="name"
-          >
-            <el-input
-              v-model="form.name"
-              placeholder="请输入门店名称"
-              :disabled="canEdit && !isEdit "
-            />
-          </el-form-item>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="门店名称"
+                prop="name"
+              >
+                <el-input
+                  v-model="form.name"
+                  placeholder="请输入门店名称"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="人均消费"
+                prop="capitaConsumption"
+              >
+                <el-input
+                  v-model="form.capitaConsumption"
+                  placeholder="请输入人均消费"
+                  :disabled="canEdit && !isEdit "
+                />
+
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-row>
             <el-col :span="12">
               <el-form-item
@@ -210,7 +299,32 @@
               </el-form-item>
             </el-col>
           </el-row>
-
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="环境情况"
+                prop="environment"
+              >
+                <el-input
+                  v-model="form.environment"
+                  placeholder="请输入环境情况"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="排队情况"
+                prop="queue"
+              >
+                <el-input
+                  v-model="form.queue"
+                  placeholder="请输入排队情况"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-row>
             <el-col :span="12">
               <el-form-item
@@ -270,7 +384,7 @@
               >
                 <el-select v-model="form.secondType" style="width: 100%;" clearable placeholder="请选择" @change="handelSecondTypeChange">
                   <el-option
-                    v-for="item in options2"
+                    v-for="item in mainClass"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -287,10 +401,11 @@
                   style="width: 100%;"
                   clearable
                   placeholder="请选择"
-                  @change="handelThreeTypeChange"
+                  loading-text="小类加载中..."
+                  :loading="loadingSmallClass"
                 >
                   <el-option
-                    v-for="item in options3"
+                    v-for="item in smallClass"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -343,6 +458,17 @@
             </div>
           </el-form-item>
           <el-form-item
+            label="简介"
+          >
+            <el-input
+              v-model="form.introduction"
+              :autosize="{ minRows: 2, maxRows: 8}"
+              type="textarea"
+              placeholder="请输入简介信息"
+              :disabled="canEdit && !isEdit "
+            />
+          </el-form-item>
+          <el-form-item
             label="描述"
           >
             <el-input
@@ -359,6 +485,7 @@
         slot="footer"
         class="dialog-footer"
       >
+
         <el-button
           size="medium"
           @click="dialogVisible = false"
@@ -380,9 +507,13 @@
 
 <script>
 import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
+import Recommend from "@/views/portal/recommend.vue";
+import Comment from "@/views/portal/comment.vue";
+import ExploreShop from "@/views/portal/exploreShop.vue";
 
 export default {
   name: "Portal",
+  components: { Recommend, ExploreShop, Comment },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -422,7 +553,11 @@ export default {
         secondType: "",
         threeType: "",
         heat: 100,
-        workTime: "9:00-22:00"
+        workTime: "9:00-22:00",
+        introduction: "",
+        environment: "",
+        queue: "",
+        capitaConsumption: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -444,15 +579,14 @@ export default {
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
-      // 搜索关键字
-      name: "",
+      searchName: "", // 搜索关键字
       city: "",
       totalElements: 0,
       pageIndex: 1,
       pageCurrent: 1,
-      pageSize: 10,
-      options2: [],
-      options3: [],
+      pageSize: 5,
+      mainClass: [],
+      smallClass: [],
       filterCityList: [],
       searchCityData: [],
       parentCity: -1, // 父级城市id
@@ -472,48 +606,85 @@ export default {
           }
           const outputData = convertData(data);
           resolve(outputData);
-        } }
+        }
+      },
+      searchSmallClass: "",
+      searchMainClass: "",
+      environment: "",
+      queue: "",
+      introduction: "",
+      loadingSmallClass: false,
+      shopId: "",
+      innerVisible: false,
+      exploreId: "",
+      commentId: "",
+      exploreShopInner: false,
+      commentInner: false
     };
   },
+  watch: {
+
+  },
   mounted() {
-    this.initTableData();
-    this.handelSecondType();
+    this.initTableData({
+      type: this.form.type
+    });
     this.getFilterCityListData(this.parentCity);
+    this.handelSearchSecondType();
   },
   methods: {
-    /* 搜索数据 */
-    async  handelSearchTableData() {
+    /**
+     * @description:评论
+     * @return {*}
+     */
+    handelComment(row) {
+      console.log(row);
+      this.commentId = row.id;
+      this.commentInner = true;
+    },
+    /**
+     * @description: 探店新增
+     * @return {*}
+     */
+    handelExploreShop(row) {
+      console.log(row);
+      this.exploreId = row.id;
+      this.exploreShopInner = true;
+    },
+    /**
+     * @description: 推荐新增
+     * @return {*}
+     */
+    handelRecommendAdd(row) {
+      this.shopId = row.id;
+      this.innerVisible = true;
+    },
+    /**
+     * @description: 初始化数据
+     * @return {*} 美食列表请求参数
+     */
+    async initTableData(res) {
       try {
         this.tableLoading = true;
-        const res = {
-          type: "美食"
-        };
-        if (this.name !== null && this.name !== "") {
-          res.name = this.name;
-        }
-        if (this.searchCityData.length) {
-          res.city = this.searchCityData[ this.searchCityData.length - 1];
-          this.city = this.searchCityData[ this.searchCityData.length - 1];
-        }
-        this.pageIndex = 1;
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
           }
         );
-        this.pageCurrent = 1;
         this.tableData = data.content;
         this.totalElements = data.totalElements;
-        console.log("搜索", this.pageIndex, this.totalElements);
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-    /* 城市数据 */
-    async  getFilterCityListData(parentCity) {
+    /**
+     * @description: 城市数据
+     * @return {*} -1代表城市的第一级
+     */
+    async getFilterCityListData(parentCity) {
       const { data } = await getCityFindPage(parentCity);
       function convertData(data) {
         return data.map(item => ({
@@ -523,12 +694,15 @@ export default {
           children: item.childs ? convertData(item.childs) : []
         }));
       }
-      const outputData = convertData(data);
-      this.filterCityList = outputData;
+      this.filterCityList = convertData(data);
     },
-    // 获取二级分类
-    async handelSecondType() {
-      this.options2 = [];
+
+    /**
+     * @description:查询大类
+     * @return {*}
+     */
+    async handelSearchSecondType() {
+      this.mainClass = [];
       const page = {
         pageIndex: 1,
         pageSize: 1000
@@ -541,99 +715,178 @@ export default {
         content
       }} = await getDictFind(page, param);
       content.forEach(item => {
-        this.options2.push({
+        this.mainClass.push({
           value: item.name,
           label: item.name
         });
       });
     },
-    handelThreeTypeChange(value) {
-      this.form.threeType = value;
+    /**
+     * @description: 搜索数据
+     * @return {*}
+     */
+    async handelSearchTableData() {
+      const res = {
+        city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+        name: this.searchName,
+        type: "美食",
+        secondType: this.searchMainClass,
+        threeType: this.searchSmallClass
+      };
+      function filterNonEmptyValues(obj) {
+        const nonEmptyProperties = {};
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" || value) {
+            nonEmptyProperties[key] = value;
+          }
+        }
+        return nonEmptyProperties;
+      }
+      const nonEmptyValues = filterNonEmptyValues(res);
+      this.initTableData(nonEmptyValues);
     },
-    async handelSecondTypeChange(value) {
-      this.options3 = [];
-      this.form.secondType = value;
+    /**
+     * @description: 触发小类筛选
+     * @return {*}
+     */
+    handelSearchSmallClassVisible(condition) {
+      if (!this.searchMainClass) {
+        this.$message.info("未选择大类信息，无法查询小类信息");
+        return;
+      }
+      if (condition) {
+        this.handelSecondTypeChange(this.searchMainClass, this.searchCityData);
+      } else {
+        this.smallClass = [];
+      }
+    },
+    /**
+     * @description: 通过大类查询小类信息列表
+     * @param {*} value
+     * @return {*}
+     */
+    async handelSecondTypeChange(value, cityArray = this.form.city.split("/")) {
+      const city = cityArray.length > 2 ? cityArray[cityArray.length - 2] : cityArray[cityArray.length - 1];
+      this.loadingSmallClass = true;
+      this.smallClass = [];
       const page = {
         pageIndex: 1,
         pageSize: 1000
       };
       const param = {
         type: "美食",
-        parentName: this.form.secondType,
-        city: this.form.city[this.form.city.length - 1],
+        parentName: value,
+        city: city,
         level: 3
       };
-      const { data: {
-        content
-      }} = await getDictFind(page, param);
-      content.forEach(item => {
-        this.options3.push({
-          value: item.name,
-          label: item.name
-        });
-      });
-    },
-    async initTableData() {
       try {
-        this.tableLoading = true;
-        const res = {
-          type: "美食"
-        };
-        if (this.name !== null && this.name !== "") {
-          res.name = this.name;
-        }
-        if (this.city !== null && this.city !== "") {
-          res.city = this.city;
-        }
-        console.log("刷新", this.pageIndex);
-        const { data } = await getList(
-          res,
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }
-        );
-
-        this.tableData = data.content;
-        this.totalElements = data.totalElements;
+        const { data: {
+          content
+        }} = await getDictFind(page, param);
+        content.forEach(item => {
+          this.smallClass.push({
+            value: item.name,
+            label: item.name
+          });
+        });
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
-        this.tableLoading = false;
+        this.loadingSmallClass = false;
       }
     },
-    // 分页
+
+    /**
+     * @description: 分页
+     * @param {*} index
+     * @return {*}
+     */
     handelCurrentPage(index) {
       this.pageIndex = index;
-      console.log("点击分页", this.pageIndex);
-      this.initTableData();
+      this.initTableData({
+        type: this.form.type
+      });
     },
-    // 重置搜索条件
-    handleFilterReset() {
-      this.name = "";
-      this.city = "";
-      this.initTableData();
-    },
-    // 点击表格行
-    handleRowClick(row) {
-      this.$refs.Table.toggleRowSelection(row);
-    },
-    // 按钮失焦
-    dissolveFocus(event) {
-      let target = event.target;
-      if (target.nodeName === "SPAN") {
-        target = event.target.parentNode;
-      }
-      target.blur();
-    },
-    // 增加门店-打开对话框
-    handleShopAdd(event) {
+    /**
+     * @description: 增加门店-打开对话框
+     * @return {*}
+     */
+    handleShopAdd() {
       this.dialogTitle = "新增门店";
       this.isEdit = false;
       this.canEdit = false;
-      this.dissolveFocus(event);
       this.dialogVisible = true;
     },
-    // 关闭对话
+    /**
+     * @description: 编辑
+     * @param {*} row
+     * @return {*}
+     */
+    async handleEdit(row) {
+      this.dialogTitle = "编辑门店信息";
+      this.isEdit = true;
+      this.canEdit = false;
+      this.dialogVisible = true;
+      const key = Object.keys(row);
+      key.forEach((key) => {
+        if (key === "image") {
+          this.imageBase64 = row[key];
+          this.form.image = [{ name: "图片" }];
+        } else {
+          this.form[key] = row[key];
+        }
+      });
+    },
+    /**
+     * @description: 提交新增或者编辑表单
+     * @return {*}
+     */
+    handleFormConfirm() {
+      // 查看并且没有编辑
+      if (this.canEdit && !this.isEdit) {
+        this.dialogVisible = false;
+        return;
+      }
+      this.form.type = "美食";
+      this.$refs.form.validate(async(valid) => {
+        if (valid) {
+          try {
+            this.addBtnLoading = true;
+            this.form.city = this.form.city.join("/");
+            const params = {
+              ...this.form,
+              image: this.imageBase64
+            };
+            // 新增门店
+            if (!this.canEdit && !this.isEdit) {
+              await addShop(params);
+            } else if (!this.canEdit && this.isEdit) {
+              await editShop(params);
+            }
+            this.resetForm();
+            this.dialogVisible = false;
+            this.initTableData({
+              type: "美食"
+            });
+          } catch (error) {
+            if (!this.canEdit) {
+              this.$message.error(`新增失败${error}`);
+            } else if (this.canEdit && this.isEdit) {
+              this.$message.error(`修改失败${error}`);
+            }
+          } finally {
+            this.addBtnLoading = false;
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    /**
+     * @description: 关闭对话
+     * @param {*} done
+     * @return {*}
+     */
     handleDialogClose(done) {
       if (this.addBtnLoading) {
         this.$message.info("正在增加数据……");
@@ -643,7 +896,11 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除门店
+    /**
+     * @description: 删除门店
+     * @param {*} item
+     * @return {*}
+     */
     handleShopDel(item) {
       this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
         confirmButtonText: "确定",
@@ -651,13 +908,14 @@ export default {
         type: "warning"
       })
         .then(async() => {
-          console.log(item);
           try {
             await delShop(item.id);
             this.$message.success("删除成功!");
-            this.initTableData();
+            this.initTableData({
+              type: this.form.type
+            });
           } catch (error) {
-            this.$message.warning("删除失败");
+            this.$message.error(`删除失败${error}`);
           }
         })
         .catch(() => {
@@ -683,54 +941,7 @@ export default {
         }
       });
     },
-    // 编辑
-    async handleEdit(row) {
-      this.dialogTitle = "编辑门店信息";
-      this.isEdit = true;
-      this.canEdit = false;
-      this.dialogVisible = true;
-      const key = Object.keys(row);
-      key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
-        }
-      });
-      this.form.city = this.form.city.split("/");
 
-      console.log(this.form.city);
-      /*   this.filterCityList.forEach(async item => {
-        if (item.value === this.form.city[0]) {
-          const { data } = await getCityFindPage(item.id);
-          const children = data.map(item => ({
-            value: item.city,
-            label: item.city,
-            id: item.id
-          }));
-          item.children = children;
-        }
-      }); */
-      const page = {
-        pageIndex: 1,
-        pageSize: 1000
-      };
-      const param = {
-        type: "美食",
-        parentName: this.form.secondType,
-        level: 3
-      };
-      const { data: {
-        content
-      }} = await getDictFind(page, param);
-      content.forEach(item => {
-        this.options3.push({
-          value: item.name,
-          label: item.name
-        });
-      });
-    },
     // 重置表单
     resetForm() {
       for (const key in this.form) {
@@ -740,48 +951,7 @@ export default {
       }
       this.imageBase64 = "";
     },
-    // 提交表单
-    handleFormConfirm() {
-      console.log(this.form.city);
-      // 查看并且没有编辑
-      if (this.canEdit && !this.isEdit) {
-        this.dialogVisible = false;
-        return;
-      }
-      this.form.type = "美食";
-      this.$refs.form.validate(async(valid) => {
-        if (valid) {
-          try {
-            this.addBtnLoading = true;
-            this.form.city = this.form.city.join("/");
-            const params = {
-              ...this.form,
-              image: this.imageBase64
-            };
 
-            // 新增门店
-            if (!this.canEdit && !this.isEdit) {
-              await addShop(params);
-            } else if (!this.canEdit && this.isEdit) {
-              await editShop(params);
-            }
-            this.resetForm();
-            this.dialogVisible = false;
-            await this.initTableData();
-          } catch (error) {
-            if (!this.canEdit) {
-              this.$message.warning(`新增失败`);
-            } else if (this.canEdit && this.isEdit) {
-              this.$message.warning(`修改失败`);
-            }
-          } finally {
-            this.addBtnLoading = false;
-          }
-        } else {
-          return false;
-        }
-      });
-    },
     // 文件选中
     handleFileChange(file) {
       console.log(file);
@@ -803,7 +973,6 @@ export default {
     },
 
     handleRemove(file, fileList) {
-      console.log(file, fileList);
       this.form.image = [];
     },
     handleExceed() {
