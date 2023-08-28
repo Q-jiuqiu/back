@@ -1,8 +1,8 @@
 /*
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
- * @LastEditors: quling
- * @LastEditTime: 2023-05-05 21:41:48
+ * @LastEditors: 何元鹏
+ * @LastEditTime: 2023-08-27 11:49:58
  * @Description:
  * @FilePath: \vue-admin-template\src\store\modules\app.js
  */
@@ -20,7 +20,8 @@ const state = {
 
 const mutations = {
   TOGGLE_SIDEBAR: (state) => {
-    state.sidebar.opened = !state.sidebar.opened;
+    console.log(!state.sidebar.opened);
+    state.sidebar.opened = true;
     state.sidebar.withoutAnimation = false;
     if (state.sidebar.opened) {
       Cookies.set("sidebarStatus", 1);

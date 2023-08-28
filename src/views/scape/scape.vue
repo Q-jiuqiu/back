@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-01 19:12:56
+ * @LastEditTime: 2023-08-27 13:17:59
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -14,7 +14,7 @@
         <div class="search-item">
           <div class="label">名称:</div>
           <el-input
-            v-model="name"
+            v-model="searchName"
             placeholder="搜索店铺名称"
           />
         </div>
@@ -28,18 +28,23 @@
             placeholder="请选择"
           />
         </div>
-
+        <div class="search-item">
+          <div class="label">分类:</div>
+          <el-select v-model="classification" style="width: 100%;" clearable placeholder="请选择">
+            <el-option
+              v-for="item in secondClass"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
         <el-button
           type="primary"
           size="medium"
           icon="el-icon-search"
           @click="handelSearchTableData"
         >搜索</el-button>
-        <el-button
-          size="medium"
-          icon="el-icon-search"
-          @click="handleFilterReset"
-        >重置</el-button>
       </div>
       <el-button
         type="primary"
@@ -57,7 +62,6 @@
         :data="tableData"
         border
         height="calc(100% - 3rem )"
-        @row-click="handleRowClick"
       >
         <el-table-column
           prop="secondType"
@@ -75,18 +79,12 @@
           align="center"
         />
         <el-table-column
-          prop="province"
-          width="180"
-          label="经纬度"
+          prop="capitaConsumption"
+          width="100"
+          label="门票"
           header-align="center"
           align="center"
-        >
-          <template slot-scope="scope">
-            (
-            {{ scope&&scope.row.longitude }} ,
-            {{ scope&&scope.row.latitude }})
-          </template>
-        </el-table-column>
+        />
         <el-table-column
           prop="addr"
           label="地址"
@@ -101,14 +99,18 @@
           header-align="center"
           align="left"
         />
-
         <el-table-column
           label="操作"
-          width="150"
+          width="200"
           header-align="center"
           align="center"
         >
           <template slot-scope="scope">
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handleFares(scope.row)"
+            >票价</el-button>
             <el-button
               type="text"
               size="small"
@@ -142,6 +144,13 @@
         @current-change="handelCurrentPage"
       />
     </div>
+    <!-- 票价情况 -->
+    <el-dialog
+      width="40%"
+      title="票价情况"
+      :visible.sync="faresInner"
+      append-to-body
+    ><Fares :fares-id="faresId" /></el-dialog>
     <!-- 新增景区 -->
     <el-dialog
       :visible.sync="dialogVisible"
@@ -229,6 +238,32 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
+                label="环境情况"
+                prop="environment"
+              >
+                <el-input
+                  v-model="form.environment"
+                  placeholder="请输入环境情况"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item
+                label="排队情况"
+                prop="queue"
+              >
+                <el-input
+                  v-model="form.queue"
+                  placeholder="请输入排队情况"
+                  :disabled="canEdit && !isEdit "
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
                 label="经度"
                 prop="longitude"
               >
@@ -261,7 +296,7 @@
               >
                 <el-select v-model="form.secondType" style="width: 100%;" clearable placeholder="请选择">
                   <el-option
-                    v-for="item in options2"
+                    v-for="item in secondClass"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value"
@@ -278,6 +313,16 @@
               </el-form-item>
             </el-col>
 
+          </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="价格"
+                :disabled="canEdit && !isEdit "
+              >
+                <el-input v-model="form.capitaConsumption" placeholder="请输入价格" />
+              </el-form-item>
+            </el-col>
           </el-row>
           <el-form-item
             label="图片"
@@ -322,6 +367,17 @@
             </div>
           </el-form-item>
           <el-form-item
+            label="简介"
+          >
+            <el-input
+              v-model="form.introduction"
+              :autosize="{ minRows: 2, maxRows: 8}"
+              type="textarea"
+              placeholder="请输入简介信息"
+              :disabled="canEdit && !isEdit "
+            />
+          </el-form-item>
+          <el-form-item
             label="描述"
           >
             <el-input
@@ -359,9 +415,10 @@
 
 <script>
 import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
-
+import Fares from "@/views/scape/fares.vue";
 export default {
   name: "Portal",
+  components: { Fares },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -401,7 +458,12 @@ export default {
         secondType: "",
         heat: 100,
         workTime: "9:00-18:00",
-        threeType: ""
+        threeType: "",
+        introduction: "",
+        price: "",
+        environment: "",
+        queue: "",
+        capitaConsumption: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -423,23 +485,12 @@ export default {
       addBtnLoading: false, // 添加景区loading
       tableLoading: false, // 表格loading
       changeImage: false, // 是否展示修改图片按钮
-      // 搜索关键字
-      name: "",
+      searchName: "", // 搜索关键字
       city: "",
-      options1: [
-        {
-          value: "美食",
-          label: "美食"
-        },
-        {
-          value: "风景",
-          label: "风景"
-        }
-      ],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
-      options2: [],
+      pageSize: 1,
+      secondClass: [],
       filterCityList: [],
       searchCityData: [],
       parentCity: -1, // 父级城市id
@@ -460,46 +511,57 @@ export default {
           const outputData = convertData(data);
           console.log(outputData);
           resolve(outputData);
-        } }
+        } },
+      classification: "",
+      faresId: "",
+      faresInner: false
     };
   },
   mounted() {
-    this.initTableData();
+    this.initTableData({
+      type: this.form.type
+    });
     this.handelSecondType();
-    this.getFilterCityListData();
+    this.getFilterCityListData(this.parentCity);
   },
   methods: {
-    /* 搜索数据 */
-    async  handelSearchTableData() {
+    /**
+     * @description: 票价情况
+     * @param {*} row
+     * @return {*}
+     */
+    handleFares(row) {
+      console.log(row);
+      this.faresId = row.id;
+      this.faresInner = true;
+    },
+    /**
+     * @description: 初始化数据
+     * @return {*} 风景列表请求参数
+     */
+    async initTableData(res) {
       try {
         this.tableLoading = true;
-        const res = {
-          type: "风景"
-        };
-        if (this.name !== null && this.name !== "") {
-          res.name = this.name;
-        }
-        if (this.searchCityData.length) {
-          res.city = this.searchCityData[ this.searchCityData.length - 1];
-        }
         const { data } = await getList(
           res,
           { pageIndex: this.pageIndex,
             pageSize: this.pageSize
           }
         );
-
         this.tableData = data.content;
         this.totalElements = data.totalElements;
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-    /* 城市数据 */
-    async  getFilterCityListData() {
-      const { data } = await getCityFindPage(this.parentCity);
+    /**
+     * @description: 城市数据
+     * @return {*} -1代表城市的第一级
+     */
+    async getFilterCityListData(parentCity) {
+      const { data } = await getCityFindPage(parentCity);
       function convertData(data) {
         return data.map(item => ({
           value: item.city,
@@ -508,14 +570,37 @@ export default {
           children: item.childs ? convertData(item.childs) : []
         }));
       }
-
-      const outputData = convertData(data);
-      console.log(outputData);
-      this.filterCityList = outputData;
+      this.filterCityList = convertData(data);
     },
-    // 获取二级分类
+    /**
+     * @description: 搜索
+     * @return {*}
+     */
+    async  handelSearchTableData() {
+      const res = {
+        city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+        name: this.searchName,
+        type: "风景",
+        secondType: this.classification
+      };
+      function filterNonEmptyValues(obj) {
+        const nonEmptyProperties = {};
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== "" || value) {
+            nonEmptyProperties[key] = value;
+          }
+        }
+        return nonEmptyProperties;
+      }
+      const nonEmptyValues = filterNonEmptyValues(res);
+      this.initTableData(nonEmptyValues);
+    },
+    /**
+     * @description: 获取二级分类
+     * @return {*}
+     */
     async handelSecondType() {
-      this.options2 = [];
+      this.secondClass = [];
       const { data: {
         content
       }} = await getDictFind({
@@ -524,77 +609,108 @@ export default {
       }, { type: "风景",
         level: 2 });
       content.forEach(item => {
-        this.options2.push({
+        this.secondClass.push({
           value: item.name,
           label: item.name
         });
       });
     },
-    async initTableData() {
-      try {
-        this.tableLoading = true;
-        const res = {
-          type: "风景"
-        };
-        if (this.name !== null && this.name !== "") {
-          res.name = this.name;
-        }
-        if (this.city !== null && this.city !== "") {
-          res.city = this.city;
-        }
-        if (this.region !== null && this.region !== "") {
-          res.region = this.region;
-        }
-        const { data } = await getList(
-          res,
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }
-        );
-        console.log(data);
-        this.totalElements = data.totalElements;
-        this.tableData = data.content;
-      } catch (error) {
-        this.$message.warning("获取数据失败");
-      } finally {
-        this.tableLoading = false;
-      }
-    },
-    // 分页
+    /**
+     * @description: 分页
+     * @param {*} index
+     * @return {*}
+     */
     handelCurrentPage(index) {
-      console.log(index);
       this.pageIndex = index;
-      this.initTableData();
+      const res = {
+        city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+        name: this.searchName,
+        type: "风景",
+        secondType: this.classification
+      };
+      this.initTableData(res);
     },
-    // 重置搜索条件
-    handleFilterReset() {
-      this.name = "";
-      this.city = "";
-      this.region = "";
-      this.initTableData();
-    },
-    // 点击表格行
-    handleRowClick(row) {
-      console.log(row);
-      this.$refs.Table.toggleRowSelection(row);
-    },
-    // 按钮失焦
-    dissolveFocus(event) {
-      let target = event.target;
-      if (target.nodeName === "SPAN") {
-        target = event.target.parentNode;
-      }
-      target.blur();
-    },
-    // 增加景区-打开对话框
-    handleShopAdd(event) {
+    /**
+     * @description: 增加景区-打开对话框
+     * @param {*}
+     * @return {*}
+     */
+    handleShopAdd() {
       this.isEdit = false;
       this.canEdit = false;
-      this.dissolveFocus(event);
       this.dialogVisible = true;
       this.dialogTitle = "新增景区";
     },
-    // 关闭对话
+    /**
+     * @description: 编辑
+     * @param {*} row
+     * @return {*}
+     */
+    async handleEdit(row) {
+      this.dialogTitle = "编辑景区信息";
+      this.isEdit = true;
+      this.canEdit = false;
+      this.dialogVisible = true;
+      const key = Object.keys(row);
+      key.forEach((key) => {
+        if (key === "image") {
+          this.imageBase64 = row[key];
+          this.form.image = [{ name: "图片" }];
+        } else {
+          this.form[key] = row[key];
+        }
+      });
+    },
+    /**
+     * @description: 提交表单
+     * @return {*}
+     */
+    handleFormConfirm() {
+      if (this.canEdit && !this.isEdit) {
+        this.dialogVisible = false;
+        return;
+      }
+      this.form.type = "风景";
+      this.$refs.form.validate(async(valid) => {
+        if (valid) {
+          try {
+            this.addBtnLoading = true;
+
+            this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
+            const params = {
+              ...this.form,
+              image: this.imageBase64
+            };
+            console.log(params);
+            if (!this.canEdit && !this.isEdit) {
+              await addShop(params);
+            } else if (!this.canEdit && this.isEdit) {
+              await editShop(params);
+            }
+            this.resetForm();
+            this.dialogVisible = false;
+            await this.initTableData({
+              type: "风景"
+            });
+          } catch (error) {
+            if (!this.canEdit) {
+              this.$message.error(`新增失败${error}`);
+            } else if (this.canEdit && this.isEdit) {
+              this.$message.error(`修改失败${error}`);
+            }
+          } finally {
+            this.addBtnLoading = false;
+          }
+        } else {
+          return false;
+        }
+      });
+    },
+    /**
+     * @description: 关闭对话
+     * @param {*} done
+     * @return {*}
+     */
     handleDialogClose(done) {
       if (this.addBtnLoading) {
         this.$message.info("正在增加数据……");
@@ -604,7 +720,11 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除景区
+    /**
+     * @description: 删除景区
+     * @param {*} item
+     * @return {*}
+     */
     handleShopDel(item) {
       this.$confirm("此操作将永久删除选中景区, 是否继续?", "提示", {
         confirmButtonText: "确定",
@@ -612,13 +732,21 @@ export default {
         type: "warning"
       })
         .then(async() => {
-          console.log(item);
+          this.tableLoading = true;
           try {
             await delShop(item.id);
             this.$message.success("删除成功!");
-            this.initTableData();
+            const res = {
+              city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+              name: this.searchName,
+              type: "风景",
+              secondType: this.classification
+            };
+            this.initTableData(res);
           } catch (error) {
             this.$message.warning("删除失败");
+          } finally {
+            this.tableLoading = false;
           }
         })
         .catch(() => {
@@ -644,41 +772,6 @@ export default {
         }
       });
     },
-    // 编辑
-    async  handleEdit(row) {
-      console.log(row);
-      this.dialogTitle = "编辑景区信息";
-      this.isEdit = true;
-      this.canEdit = false;
-      this.dialogVisible = true;
-      const key = Object.keys(row);
-      key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
-        }
-      });
-      const page = {
-        pageIndex: 1,
-        pageSize: 1000
-      };
-      const param = {
-        type: "风景",
-        parentName: this.form.secondType,
-        level: 3
-      };
-      const { data: {
-        content
-      }} = await getDictFind(page, param);
-      content.forEach(item => {
-        this.options3.push({
-          value: item.name,
-          label: item.name
-        });
-      });
-    },
 
     // 重置表单
     resetForm() {
@@ -689,87 +782,9 @@ export default {
       }
       this.imageBase64 = "";
     },
-    // 提交表单
-    handleFormConfirm() {
-      // 查看并且没有编辑
-      if (this.canEdit && !this.isEdit) {
-        this.dialogVisible = false;
-        return;
-      }
-      this.form.type = "风景";
-      this.$refs.form.validate(async(valid) => {
-        if (valid) {
-          try {
-            this.addBtnLoading = true;
-            this.form.city = this.form.city.join("/");
-            const params = {
-              ...this.form,
-              image: this.imageBase64
-            };
-            if (!this.canEdit && !this.isEdit) {
-              await addShop(params);
-            } else if (!this.canEdit && this.isEdit) {
-              await editShop(params);
-            }
-            this.resetForm();
-            this.dialogVisible = false;
-            await this.initTableData();
-          } catch (error) {
-            if (!this.canEdit) {
-              this.$message.warning(`新增失败`);
-            } else if (this.canEdit && this.isEdit) {
-              this.$message.warning(`修改失败`);
-            }
-          } finally {
-            this.addBtnLoading = false;
-          }
-        } else {
-          return false;
-        }
-      });
-    /*   console.log(this.canEdit, this.isEdit);
-      // 查看并且没有编辑
-      if (this.canEdit && !this.isEdit) {
-        this.dialogVisible = false;
-        return;
-      }
-      this.form.type = "风景";
-      this.$refs.form.validate(async(valid) => {
-        if (valid) {
-          try {
-            this.addBtnLoading = true;
-            this.form.city = this.form.city.join("/");
-            const params = {
-              ...this.form,
-              image: this.imageBase64
-            };
 
-            // 新增门店
-            if (!this.canEdit && !this.isEdit) {
-              await addShop(params);
-            } else if (!this.canEdit && this.isEdit) {
-              await editShop(params);
-            }
-            this.resetForm();
-            this.dialogVisible = false;
-            await this.initTableData();
-          } catch (error) {
-            if (!this.canEdit) {
-              this.$message.warning(`新增失败`);
-            } else if (this.canEdit && this.isEdit) {
-              this.$message.warning(`修改失败`);
-            }
-          } finally {
-            this.addBtnLoading = false;
-          }
-        } else {
-          return false;
-        }
-      }); */
-    },
     // 文件选中
     handleFileChange(file) {
-      console.log(file);
       this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
@@ -788,7 +803,6 @@ export default {
     },
 
     handleRemove(file, fileList) {
-      console.log(file, fileList);
       this.form.image = [];
     },
     handleExceed() {

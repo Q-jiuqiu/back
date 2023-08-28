@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-03 20:41:47
+ * @LastEditTime: 2023-08-27 11:45:47
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -53,6 +53,7 @@ export const constantRoutes = [
   {
     path: "/",
     component: Layout,
+    meta: { title: "小程序管理后台", icon: "dashboard" },
     redirect: "/portal",
     children: [
       {
@@ -67,7 +68,7 @@ export const constantRoutes = [
         component: () => import("@/views/scape/scape"),
         meta: { title: "景点", icon: "el-icon-s-order" }
       },
-      {
+      /*   {
         path: "comment",
         name: "comment",
         component: () => import("@/views/comment/comment"),
@@ -84,7 +85,7 @@ export const constantRoutes = [
         name: "avoidPits",
         component: () => import("@/views/avoidPits/avoidPits"),
         meta: { title: "指南", icon: "el-icon-s-opportunity" }
-      },
+      }, */
       {
         path: "dictionary",
         name: "dictionary",

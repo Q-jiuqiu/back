@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-03 15:43:48
+ * @LastEditTime: 2023-08-24 18:29:28
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -14,14 +14,13 @@
 
         <div class="search-item">
           <div class="label">城市:</div>
-          <el-select v-model="city" placeholder="请选择" @change="handelCityChange">
-            <el-option
-              v-for="item in cityOption"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+          <el-cascader
+            v-model="searchCityData"
+            :options="filterCityList"
+            :props="{ checkStrictly: true,...props }"
+            clearable
+            placeholder="请选择"
+          />
         </div>
         <div class="search-item">
           <div class="label">类型:</div>
@@ -236,7 +235,7 @@
 </template>
 
 <script>
-import { postRecommendAdd, deleteRecommend, postRecommendEdit, getRecommendFind, getTypeCityFind, getList } from "@/api";
+import { postRecommendAdd, deleteRecommend, postRecommendEdit, getRecommendFind, getTypeCityFind, getList, getCityFindPage } from "@/api";
 
 export default {
   name: "Recommend",
@@ -259,6 +258,7 @@ export default {
         name: "",
         city: "",
         type: ""
+
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -291,14 +291,51 @@ export default {
         }
       ],
       cityOption: [],
-      nameOptions: []
+      nameOptions: [],
+      filterCityList: [],
+      searchCityData: [],
+      parentCity: -1, // 父级城市id
+      props: {
+        lazy: true,
+        async lazyLoad(node, resolve) {
+          const { data: { id }} = node;
+          const { data } = await getCityFindPage(id);
+          function convertData(data) {
+            return data.map(item => ({
+              value: item.city,
+              label: item.city,
+              id: item.id,
+              level: item.level,
+              leaf: item.level >= 3
+            }));
+          }
+          const outputData = convertData(data);
+          console.log(outputData);
+          resolve(outputData);
+        } }
     };
   },
   mounted() {
-    /*  this.initTableData(); */
     this.getQueryCityData();
+    this.getFilterCityListData();
   },
   methods: {
+    /* 城市数据 */
+    async  getFilterCityListData() {
+      const { data } = await getCityFindPage(this.parentCity);
+      function convertData(data) {
+        return data.map(item => ({
+          value: item.city,
+          label: item.city,
+          id: item.id,
+          children: item.childs ? convertData(item.childs) : []
+        }));
+      }
+
+      const outputData = convertData(data);
+      console.log(outputData);
+      this.filterCityList = outputData;
+    },
     // 查询城市信息
     async getQueryCityData() {
       const { data } = await getTypeCityFind();
@@ -312,7 +349,6 @@ export default {
       this.getStoreIdData(data[0], this.type);
     },
     handelTypeChange(v) {
-      console.log(v);
       this.type = v;
       this.form.name = "";
       this.getStoreIdData(this.city, v);
@@ -335,7 +371,7 @@ export default {
       );
       this.form.name = data.content[0].id;
       this.nameOptions = data.content;
-      this.initTableData();
+      this.initTableData(data.content[0].id);
     },
     handelNameChange(value) {
       console.log(value);
@@ -347,10 +383,11 @@ export default {
       try {
         this.tableLoading = true;
         const { data } = await getRecommendFind(
-          this.form.name
+          id
         );
         console.log(data);
         this.tableData = data;
+        this.nameOptions = data;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {

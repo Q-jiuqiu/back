@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-31 19:18:41
+ * @LastEditTime: 2023-08-24 19:54:46
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -202,6 +202,29 @@ export function getCommentById({ id, pageIndex, pageSize }) {
 export function deleteComment(id) {
   return request({
     url: `/pro/rest/dbs/delete/comment/${id}`,
+    method: "delete"
+  });
+}
+
+// 查询探店
+export function getRestFindExp(productId) {
+  return request({
+    url: `/pro/rest/dbs/exp/find/${productId}`,
+    method: "get"
+  });
+}
+// 新增探店
+export function postRestExpAdd(params) {
+  return request({
+    url: `/pro/rest/dbs/exp/add`,
+    method: "post",
+    data: params
+  });
+}
+// 删除评价
+export function deleteExp(id) {
+  return request({
+    url: `/pro/rest/dbs/exp/del/${id}`,
     method: "delete"
   });
 }

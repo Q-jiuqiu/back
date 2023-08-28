@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-20 19:16:04
+ * @LastEditTime: 2023-08-27 13:27:20
 -->
 <!--
  * @Author: quling
@@ -20,28 +20,15 @@
 
         <div class="search-item">
           <div class="label">分类:</div>
-          <el-select v-model="searchCityData" clearable placeholder="请选择">
+          <el-select v-model="searchCityData" clearable placeholder="请选择" @change="handelClassify">
             <el-option
-              v-for="item in filterCityList"
+              v-for="item in filterClassList"
               :key="item.value"
               :label="item.value"
               :value="item.value"
             />
           </el-select>
-
         </div>
-
-        <el-button
-          type="primary"
-          size="medium"
-          icon="el-icon-search"
-          @click="initTableData"
-        >搜索</el-button>
-        <el-button
-          size="medium"
-          icon="el-icon-search"
-          @click="handleFilterReset"
-        >重置</el-button>
       </div>
       <el-button
         type="primary"
@@ -134,7 +121,7 @@
             >
               <el-select v-model="form.parentName" clearable placeholder="请选择">
                 <el-option
-                  v-for="item in options"
+                  v-for="item in filterClassList"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
@@ -182,7 +169,7 @@
 </template>
 
 <script>
-import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit } from "@/api";
 
 export default {
   name: "Portal",
@@ -208,27 +195,14 @@ export default {
         parentName: [
           { required: true, message: "请选择类型", trigger: "change" }
         ]
-        /*  city: [
-          { required: true, message: "请选择类型", trigger: "change" }
-        ] */
       },
       addBtnLoading: false, // 添加门店loading
       tableLoading: false, // 表格loading
       searchCityData: "美食",
-      options: [
-        {
-          value: "美食",
-          label: "美食"
-        },
-        {
-          value: "风景",
-          label: "风景"
-        }
-      ],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
-      filterCityList: [{
+      pageSize: 2,
+      filterClassList: [{
         value: "美食",
         label: "美食"
       },
@@ -242,18 +216,10 @@ export default {
     this.initTableData();
   },
   methods: {
-    // 编辑
-    handleEdit(row) {
-      this.dialogTitle = "编辑门店信息数据字典";
-      this.isEdit = true;
-      this.canEdit = true;
-      this.dialogVisible = true;
-      const key = Object.keys(row);
-      key.forEach((key) => {
-        this.form[key] = row[key];
-      });
-    },
-    // 获取列表
+    /**
+     * @description: 获取列表
+     * @return {*}
+     */
     async initTableData() {
       try {
         this.tableLoading = true;
@@ -275,6 +241,25 @@ export default {
         this.tableLoading = false;
       }
     },
+    /**
+     * @description: 筛选
+     * @return {*}
+     */
+    handelClassify(option) {
+      this.initTableData();
+    },
+    // 编辑
+    handleEdit(row) {
+      this.dialogTitle = "编辑门店信息数据字典";
+      this.isEdit = true;
+      this.canEdit = true;
+      this.dialogVisible = true;
+      const key = Object.keys(row);
+      key.forEach((key) => {
+        this.form[key] = row[key];
+      });
+    },
+
     // 分页
     handelCurrentPage(index) {
       this.pageIndex = index;
