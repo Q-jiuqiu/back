@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-24 20:24:51
+ * @LastEditTime: 2023-08-27 12:14:55
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -149,7 +149,7 @@
         />
         <el-table-column
           label="操作"
-          width="200"
+          width="250"
           header-align="center"
           align="center"
         >
@@ -638,7 +638,6 @@ export default {
      * @return {*}
      */
     handelComment(row) {
-      console.log(row);
       this.commentId = row.id;
       this.commentInner = true;
     },
@@ -647,7 +646,6 @@ export default {
      * @return {*}
      */
     handelExploreShop(row) {
-      console.log(row);
       this.exploreId = row.id;
       this.exploreShopInner = true;
     },
@@ -803,9 +801,14 @@ export default {
      */
     handelCurrentPage(index) {
       this.pageIndex = index;
-      this.initTableData({
-        type: this.form.type
-      });
+      const res = {
+        city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+        name: this.searchName,
+        type: "美食",
+        secondType: this.searchMainClass,
+        threeType: this.searchSmallClass
+      };
+      this.initTableData(res);
     },
     /**
      * @description: 增加门店-打开对话框
@@ -852,7 +855,7 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            this.form.city = this.form.city.join("/");
+            this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const params = {
               ...this.form,
               image: this.imageBase64
@@ -911,9 +914,13 @@ export default {
           try {
             await delShop(item.id);
             this.$message.success("删除成功!");
-            this.initTableData({
-              type: this.form.type
-            });
+            const res = {
+              city: this.searchCityData ? this.searchCityData[ this.searchCityData.length - 1] : "",
+              name: this.searchName,
+              type: "风景",
+              secondType: this.classification
+            };
+            this.initTableData(res);
           } catch (error) {
             this.$message.error(`删除失败${error}`);
           }

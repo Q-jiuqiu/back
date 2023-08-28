@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-24 20:33:11
+ * @LastEditTime: 2023-08-27 11:45:47
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -53,6 +53,7 @@ export const constantRoutes = [
   {
     path: "/",
     component: Layout,
+    meta: { title: "小程序管理后台", icon: "dashboard" },
     redirect: "/portal",
     children: [
       {

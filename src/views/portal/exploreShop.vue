@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-24 20:06:43
+ * @LastEditTime: 2023-08-27 11:36:08
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -92,7 +92,6 @@
                 只能上传jpg/png文件，且不超过1M</div>
             </el-upload>
             <div v-else>
-
               <img
                 class="image"
                 :src="imageBase64"
@@ -204,6 +203,7 @@ export default {
           this.form.headSculpture = [{ name: "图片" }];
         } else {
           this.form[key] = row[key];
+          this.form.id = row.id;
         }
       });
     },
@@ -246,10 +246,10 @@ export default {
         name: "",
         headSculpture: [],
         comment: "",
-        productId: this.exploreId,
-        id: item.id
+        productId: this.exploreId
+
       };
-      this.imageBase64 = [];
+      this.imageBase64 = "";
     },
 
     /**
