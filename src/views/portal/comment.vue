@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-24 20:29:51
+ * @LastEditTime: 2023-08-31 20:46:33
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -45,7 +45,17 @@ export default {
   // 计算属性
   computed: {},
   // 侦听器
-  watch: {},
+  watch: {
+    commentId: {
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log(newVal, oldVal);
+        if (newVal !== oldVal) {
+          this.getCommentDataList();
+        }
+      }
+    }
+  },
   mounted() {
     this.getCommentDataList();
   },

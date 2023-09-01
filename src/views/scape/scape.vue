@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 13:17:59
+ * @LastEditTime: 2023-08-31 20:49:55
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -15,7 +15,7 @@
           <div class="label">名称:</div>
           <el-input
             v-model="searchName"
-            placeholder="搜索店铺名称"
+            placeholder="搜索景区名称"
           />
         </div>
         <div class="search-item">
@@ -150,7 +150,24 @@
       title="票价情况"
       :visible.sync="faresInner"
       append-to-body
-    ><Fares :fares-id="faresId" /></el-dialog>
+    >
+      <div class="fares">
+        <el-form ref="faresForm" :model="faresForm" label-width="80px">
+          <el-form-item label="成人票:">
+            <el-input v-model="faresForm.adult" />
+          </el-form-item>
+          <el-form-item label="老人票:">
+            <el-input v-model="faresForm.elder" />
+          </el-form-item>
+          <el-form-item label="儿童票:">
+            <el-input v-model="faresForm.child" />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handelSubmitFaresForm('faresForm')">提交</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-dialog>
     <!-- 新增景区 -->
     <el-dialog
       :visible.sync="dialogVisible"
@@ -414,11 +431,9 @@
 </template>
 
 <script>
-import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
-import Fares from "@/views/scape/fares.vue";
+import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd } from "@/api";
 export default {
   name: "Portal",
-  components: { Fares },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -489,7 +504,7 @@ export default {
       city: "",
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 1,
+      pageSize: 10,
       secondClass: [],
       filterCityList: [],
       searchCityData: [],
@@ -513,8 +528,14 @@ export default {
           resolve(outputData);
         } },
       classification: "",
-      faresId: "",
-      faresInner: false
+      faresInner: false,
+      faresForm: {
+        id: "",
+        adult: "",
+        elder: "",
+        child: "",
+        productId: ""
+      }
     };
   },
   mounted() {
@@ -530,10 +551,39 @@ export default {
      * @param {*} row
      * @return {*}
      */
-    handleFares(row) {
-      console.log(row);
-      this.faresId = row.id;
+    async handleFares(row) {
       this.faresInner = true;
+      this.faresForm.id = row.id;
+      this.faresForm.productId = row.id;
+      const { data } = await getFaresFindExp(row.id);
+      if (data.length) {
+        this.faresForm = data[0];
+      } else {
+        this.faresForm = {
+          id: row.id,
+          adult: "",
+          elder: "",
+          child: "",
+          productId: row.id
+        };
+      }
+    },
+    /**
+      * @description: 提交票价
+      * @param {*} formName
+      * @return {*}
+      */
+    handelSubmitFaresForm(formName) {
+      this.$refs[formName].validate(async(valid) => {
+        if (valid) {
+          const data = await postDbsFaresAdd([this.faresForm]);
+          this.faresInner = false;
+          data && this.$message.success("新建票价成功");
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
     /**
      * @description: 初始化数据

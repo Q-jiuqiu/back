@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 11:36:08
+ * @LastEditTime: 2023-08-31 20:31:51
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -41,6 +41,7 @@
       </el-button>
     </span>
     <el-dialog
+      v-loading="exploreAddLoading"
       width="30%"
       title="探店"
       :visible.sync="dataFormIs"
@@ -159,13 +160,24 @@ export default {
       dataFormIs: false,
       recommendedDataListLoading: true,
       exploreDataList: [],
-      addIsEditor: false
+      addIsEditor: false,
+      exploreAddLoading: false
     };
   },
   // 计算属性
   computed: {},
   // 侦听器
-  watch: {},
+  watch: {
+    exploreId: {
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log(newVal, oldVal);
+        if (newVal !== oldVal) {
+          this.getExploreList();
+        }
+      }
+    }
+  },
   mounted() {
     this.getExploreList();
   },
@@ -259,6 +271,7 @@ export default {
      */
     handleFormConfirm() {
       this.$refs.form.validate(async(valid) => {
+        this.exploreAddLoading = true;
         if (valid) {
           try {
             const params = {
@@ -275,6 +288,7 @@ export default {
           } finally {
             this.getExploreList();
             this.dataFormIs = false;
+            this.exploreAddLoading = false;
           }
         } else {
           return false;

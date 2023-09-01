@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-27 12:12:01
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 13:19:12
+ * @LastEditTime: 2023-08-31 20:43:44
 -->
 <template>
   <div class="fares">
@@ -24,6 +24,7 @@
 </template>
 
 <script>
+import { getFaresFindExp, postDbsFaresAdd } from "@/api";
 export default {
   name: "Fares",
   components: {},
@@ -36,33 +37,49 @@ export default {
   data() {
     return {
       form: {
+        id: this.faresId,
         adult: "",
         elder: "",
-        child: ""
+        child: "",
+        productId: this.faresId
       }
     };
   },
   computed: {},
   watch: {},
   mounted() {
+    this.getCheckFares();
   },
   methods: {
+    /**
+     * @description: 查询票价
+     * @return {*}
+     */
+    async getCheckFares() {
+      console.log(this.faresId);
+      const { data } = await getFaresFindExp(this.faresId);
+      console.log(data);
+      this.form = data[0];
+      console.log(this.form);
+    },
+
     /**
       * @description: 提交票价
       * @param {*} formName
       * @return {*}
       */
     handelSubmitForm(formName) {
-      console.log(this.faresId);
-      this.$refs[formName].validate((valid) => {
+      this.$refs[formName].validate(async(valid) => {
         if (valid) {
-          alert("submit!");
+          const data = await postDbsFaresAdd([this.form]);
+          data && this.$message.success("新建票价成功");
         } else {
           console.log("error submit!!");
           return false;
         }
       });
     }
+
   }
 };
 </script>
