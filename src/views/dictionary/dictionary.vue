@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 13:27:20
+ * @LastEditTime: 2023-09-01 22:40:21
 -->
 <!--
  * @Author: quling
@@ -183,10 +183,12 @@ export default {
       isEdit: true, // 是否编辑
       imageBase64: "", // 图片Base64编码
       form: {
+        city: "成都市",
         name: "",
         parentName: "美食",
         type: "美食",
-        level: 2
+        level: 2,
+        remark: ""
       },
       rules: {
         name: [
@@ -201,7 +203,7 @@ export default {
       searchCityData: "美食",
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 2,
+      pageSize: 20,
       filterClassList: [{
         value: "美食",
         label: "美食"

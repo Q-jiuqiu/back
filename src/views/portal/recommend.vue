@@ -182,7 +182,17 @@ export default {
   // 计算属性
   computed: {},
   // 侦听器
-  watch: {},
+  watch: {
+    foodId: {
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log(newVal, oldVal);
+        if (newVal !== oldVal) {
+          this.getRecommendedList();
+        }
+      }
+    }
+  },
   mounted() {
     this.getRecommendedList();
   },

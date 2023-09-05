@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 13:17:59
+ * @LastEditTime: 2023-09-05 20:34:10
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -15,7 +15,7 @@
           <div class="label">名称:</div>
           <el-input
             v-model="searchName"
-            placeholder="搜索店铺名称"
+            placeholder="搜索景区名称"
           />
         </div>
         <div class="search-item">
@@ -109,7 +109,7 @@
             <el-button
               type="text"
               size="small"
-              @click.stop="handleFares(scope.row)"
+              @click.stop="handleFaresCondition(scope.row)"
             >票价</el-button>
             <el-button
               type="text"
@@ -146,11 +146,90 @@
     </div>
     <!-- 票价情况 -->
     <el-dialog
-      width="40%"
+      width="45%"
       title="票价情况"
       :visible.sync="faresInner"
       append-to-body
-    ><Fares :fares-id="faresId" /></el-dialog>
+    >
+      <div class="fares">
+        <div v-if="faresIs" class="fares-list">
+          <el-table
+            ref="Table"
+            v-loading="tableLoading"
+            :data="faresList"
+            border
+            height="20rem"
+          >
+            <el-table-column
+              prop="adult"
+              label="人群类型"
+              width="120"
+              header-align="center"
+              :show-overflow-tooltip="true"
+              align="center"
+            />
+            <el-table-column
+              prop="elder"
+              label="具体条件"
+              header-align="center"
+              :show-overflow-tooltip="true"
+              align="center"
+            /> <el-table-column
+              prop="child"
+              label="票价"
+              width="100"
+              header-align="center"
+              :show-overflow-tooltip="true"
+              align="center"
+            />
+            <el-table-column
+              label="操作"
+              width="180"
+              header-align="center"
+              align="center"
+            >
+              <template slot-scope="scope">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click.stop="handleFaresPreview(scope.row)"
+                >新增</el-button>
+                <el-button
+                  type="text"
+                  size="small"
+                  @click.stop="handleFaresEdit(scope.row)"
+                >编辑</el-button>
+                <el-button
+                  type="text"
+                  size="small"
+                  class="warn-btn"
+                  @click.stop="handleFaresDel(scope.row)"
+                >
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div v-else class="fares-form">
+          <el-form ref="faresForm" :model="faresForm" label-width="80px">
+            <el-form-item label="人群类型:">
+              <el-input v-model="faresForm.adult" />
+            </el-form-item>
+            <el-form-item label="具体条件:">
+              <el-input v-model="faresForm.elder" />
+            </el-form-item>
+            <el-form-item label="票价:">
+              <el-input v-model="faresForm.child" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handelSubmitFaresForm('faresForm')">提交</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+      </div>
+    </el-dialog>
     <!-- 新增景区 -->
     <el-dialog
       :visible.sync="dialogVisible"
@@ -414,11 +493,9 @@
 </template>
 
 <script>
-import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
-import Fares from "@/views/scape/fares.vue";
+import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd, deleteFares } from "@/api";
 export default {
   name: "Portal",
-  components: { Fares },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -509,12 +586,22 @@ export default {
             }));
           }
           const outputData = convertData(data);
-          console.log(outputData);
           resolve(outputData);
         } },
       classification: "",
-      faresId: "",
-      faresInner: false
+      faresInner: false,
+      faresList: [],
+      faresForm: {
+        id: "",
+        adult: "",
+        elder: "",
+        child: "",
+        productId: ""
+      },
+      faresIs: true,
+      faresAddIs: false,
+      faresInfo: {},
+      faresFindExpId: ""
     };
   },
   mounted() {
@@ -526,14 +613,79 @@ export default {
   },
   methods: {
     /**
+     * @description: 新增票价
+     * @return {*}
+     */
+    handleFaresPreview(row) {
+      this.faresForm = {
+        id: "",
+        adult: "",
+        elder: "",
+        child: "",
+        productId: row.productId
+      };
+      this.faresIs = false;
+      this.faresAddIs = true;
+    },
+    /**
+     * @description: 编辑票价
+     * @return {*}
+     */
+    handleFaresEdit(row) {
+      this.faresForm = row;
+      this.faresInfo = row;
+      this.faresIs = false;
+      this.faresAddIs = false;
+    },
+    /**
+     * @description: 删除票价
+     * @return {*}
+     */
+    async  handleFaresDel(row) {
+      const data = await deleteFares(row.id);
+      if (data) {
+        const { data } = await getFaresFindExp(this.faresFindExpId);
+        if (data.length) {
+          this.faresList = data;
+        }
+      } else {
+        this.$message.error("删除失败");
+      }
+    },
+    /**
      * @description: 票价情况
      * @param {*} row
      * @return {*}
      */
-    handleFares(row) {
-      console.log(row);
-      this.faresId = row.id;
+    async handleFaresCondition(row) {
       this.faresInner = true;
+      this.faresFindExpId = row.id;
+      const { data } = await getFaresFindExp(row.id);
+      if (data.length) {
+        this.faresList = data;
+      }
+    },
+    /**
+      * @description: 提交票价
+      * @param {*} formName
+      * @return {*}
+      */
+    handelSubmitFaresForm(formName) {
+      this.$refs[formName].validate(async(valid) => {
+        if (valid) {
+          if (this.faresAddIs) {
+            this.faresForm.id = "";
+          } else {
+            this.faresForm.id = this.faresInfo.id;
+          }
+          const data = await postDbsFaresAdd([this.faresForm]);
+          this.faresInner = false;
+          this.faresIs = true;
+          data && this.$message.success("新建票价成功");
+        } else {
+          return false;
+        }
+      });
     },
     /**
      * @description: 初始化数据
@@ -681,7 +833,6 @@ export default {
               ...this.form,
               image: this.imageBase64
             };
-            console.log(params);
             if (!this.canEdit && !this.isEdit) {
               await addShop(params);
             } else if (!this.canEdit && this.isEdit) {

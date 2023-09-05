@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-24 19:54:46
+ * @LastEditTime: 2023-08-30 22:28:22
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -228,3 +228,26 @@ export function deleteExp(id) {
     method: "delete"
   });
 }
+// 新增票价
+export function postDbsFaresAdd(params) {
+  return request({
+    url: `/pro/rest/dbs/fares/add`,
+    method: "post",
+    data: params
+  });
+}
+// 查询票价
+export function getFaresFindExp(productId) {
+  return request({
+    url: `/pro/rest/dbs/fares/find/${productId}`,
+    method: "get"
+  });
+}
+// 删除评价
+export function deleteFares(id) {
+  return request({
+    url: `/pro/rest/dbs/fares/del/${id}`,
+    method: "delete"
+  });
+}
+

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-28 21:06:27
+ * @LastEditTime: 2023-08-31 20:40:01
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -584,7 +584,7 @@ export default {
       totalElements: 0,
       pageIndex: 1,
       pageCurrent: 1,
-      pageSize: 5,
+      pageSize: 10,
       mainClass: [],
       smallClass: [],
       filterCityList: [],
@@ -763,7 +763,10 @@ export default {
      * @param {*} value
      * @return {*}
      */
-    async handelSecondTypeChange(value, cityArray = this.form.city.split("/")) {
+    async handelSecondTypeChange(value, cityArray = this.form.city) {
+      if (!Object.prototype.toString.call(cityArray) === "[object Array]") {
+        cityArray = this.form.city.split("/");
+      }
       const city = cityArray.length > 2 ? cityArray[cityArray.length - 2] : cityArray[cityArray.length - 1];
       this.loadingSmallClass = true;
       this.smallClass = [];
