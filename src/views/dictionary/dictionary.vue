@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-31 21:02:50
+ * @LastEditTime: 2023-09-01 22:40:21
 -->
 <!--
  * @Author: quling
@@ -183,6 +183,7 @@ export default {
       isEdit: true, // 是否编辑
       imageBase64: "", // 图片Base64编码
       form: {
+        city: "成都市",
         name: "",
         parentName: "美食",
         type: "美食",
@@ -345,11 +346,9 @@ export default {
             this.addBtnLoading = true;
             this.form.type = this.form.parentName;
             if (this.canEdit) {
-              const data = await postDictEdit(this.form);
-              data && this.$message.error(`编辑失败`);
+              await postDictEdit(this.form);
             } else {
-              const data = await postDictAdd(this.form);
-              data && this.$message.error(`新增失败`);
+              await postDictAdd(this.form);
             }
             this.resetForm();
             this.dialogVisible = false;
