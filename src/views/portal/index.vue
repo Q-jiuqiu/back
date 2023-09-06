@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-31 20:40:01
+ * @LastEditTime: 2023-09-06 23:06:49
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -416,19 +416,18 @@
 
           </el-row>
           <el-form-item
-            label="图片"
+            label="店铺详情图片"
           >
             <el-upload
-              v-if="!imageBase64"
               class="upload-demo"
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png"
               multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
+              :limit="2"
+              :file-list="imageBase64"
+              list-type="picture"
               :auto-upload="false"
               :on-change="handleFileChange"
             >
@@ -442,20 +441,6 @@
               >
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
-            <div v-else>
-
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="门店照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
           </el-form-item>
           <el-form-item
             label="简介"
@@ -547,7 +532,6 @@ export default {
         city: [],
         latitude: "",
         longitude: "",
-        image: [],
         remark: "",
         type: "美食",
         secondType: "",
@@ -559,7 +543,7 @@ export default {
         queue: "",
         capitaConsumption: ""
       },
-      imageBase64: "", // 图片Base64编码
+      imageBase64: [], // 图片Base64编码
       rules: {
         name: [
           { required: true, message: "请输入门店名称", trigger: "blur" }
@@ -764,7 +748,7 @@ export default {
      * @return {*}
      */
     async handelSecondTypeChange(value, cityArray = this.form.city) {
-      if (!Object.prototype.toString.call(cityArray) === "[object Array]") {
+      if (Object.prototype.toString.call(cityArray) === "[object String]") {
         cityArray = this.form.city.split("/");
       }
       const city = cityArray.length > 2 ? cityArray[cityArray.length - 2] : cityArray[cityArray.length - 1];
@@ -835,9 +819,11 @@ export default {
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
+        if (key.includes("image")) {
+          if (row[key]) {
+            this.imageBase64.push({ url: row[key] });
+            // this.form.image.push({ url: row[key] });
+          }
         } else {
           this.form[key] = row[key];
         }
@@ -854,14 +840,22 @@ export default {
         return;
       }
       this.form.type = "美食";
+      this.imageBase64.forEach((item, index) => {
+        if (index === 0) {
+          this.form.image = item.url;
+        }
+        if (index === 1) {
+          this.form.image2 = item.url;
+        }
+      });
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
             this.addBtnLoading = true;
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const params = {
-              ...this.form,
-              image: this.imageBase64
+              ...this.form
+
             };
             // 新增门店
             if (!this.canEdit && !this.isEdit) {
@@ -943,9 +937,10 @@ export default {
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [];
+        if (key.includes("image")) {
+          if (row[key]) {
+            this.imageBase64.push({ url: row[key] });
+          }
         } else {
           this.form[key] = row[key];
         }
@@ -959,13 +954,11 @@ export default {
           this.form[key] = "";
         }
       }
-      this.imageBase64 = "";
+      this.imageBase64 = [];
     },
 
     // 文件选中
     handleFileChange(file) {
-      console.log(file);
-      this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
       const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
@@ -976,28 +969,27 @@ export default {
       // 创建文件读取实例
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
+      fileReader.onload = (e, index) => {
         this.$refs.form.validate();
+        this.imageBase64.push({
+          name: `image${index}`,
+          url: e.target.result
+        });
       };
     },
 
     handleRemove(file, fileList) {
-      this.form.image = [];
+      this.imageBase64 = fileList;
     },
-    handleExceed() {
-      this.$message.warning(`当前限制选择 1 个文件`);
-    },
-    beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
+    beforeRemove() {
+      return this.$confirm(`确定移除？`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
     },
     // 修改图片
     handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
+      this.imageBase64 = [];
     }
   }
 };

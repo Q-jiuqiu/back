@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-05 20:34:10
+ * @LastEditTime: 2023-09-05 21:45:29
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -403,6 +403,16 @@
               </el-form-item>
             </el-col>
           </el-row>
+          <el-row>
+            <el-col :span="12">
+              <el-form-item
+                label="购票地址"
+                :disabled="canEdit && !isEdit "
+              >
+                <el-input v-model="form.region" placeholder="请输入地址" />
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-form-item
             label="图片"
           >
@@ -540,7 +550,8 @@ export default {
         price: "",
         environment: "",
         queue: "",
-        capitaConsumption: ""
+        capitaConsumption: "",
+        region: ""
       },
       imageBase64: "", // 图片Base64编码
       rules: {
@@ -566,7 +577,7 @@ export default {
       city: "",
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 1,
+      pageSize: 10,
       secondClass: [],
       filterCityList: [],
       searchCityData: [],
