@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-07-31 22:48:37
+ * @LastEditTime: 2023-09-06 22:26:44
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -172,7 +172,7 @@
               <div v-for="(item,index) in form.images" :key="index">
                 <img
                   class="image"
-                  :src="item.item"
+                  :src="item.url"
                   alt="城市照片"
                 >
                 <i
@@ -180,7 +180,8 @@
                   class="el-icon-refresh"
                   title="修改图片"
                   @click="handleChangeImage"
-                /></div>
+                />
+              </div>
 
             </div>
           </el-form-item>
@@ -410,6 +411,7 @@ export default {
       key.forEach((key) => {
         if (key.includes("image")) {
           if (row[key]) {
+            this.imageBase64 = row[key];
             this.form.images.push({ url: row[key] });
           }
         }
@@ -419,24 +421,24 @@ export default {
       this.form.remark = row.remark;
     },
     // 编辑
-    handleEdit(row) {
-      console.log(row);
+    async  handleEdit(row) {
       this.dialogTitle = "编辑城市信息";
       this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
-      const key = Object.keys(row);
+      const { data } = await getCityFind(row.city);
+      const key = Object.keys(data);
       key.forEach((key) => {
         if (key.includes("image")) {
-          if (row[key]) {
-            console.log(this.form.images);
-            this.form.images.push({ url: row[key] });
+          if (data[key]) {
+            this.imageBase64 = row[key];
+            this.form.images.push({ url: data[key] });
           }
         }
       });
       this.form.city = row.city;
       this.form.id = row.id;
-      this.form.remark = row.remark;
+      this.form.remark = data.remark;
       this.form.parentCity = row.parentCity;
     },
     // 编辑
@@ -516,7 +518,6 @@ export default {
           url: e.target.result
         });
       };
-      console.log(this.form.images);
     },
 
     handleRemove(file, fileList) {
