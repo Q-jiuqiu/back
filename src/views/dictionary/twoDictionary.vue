@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-14 16:30:21
+ * @LastEditTime: 2023-09-09 00:11:52
 -->
 <template>
   <div class="portal-container">
@@ -310,7 +310,7 @@ export default {
       filterCityList: [],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 20,
+      pageSize: 10,
       tableDataOne: [],
       filterList: [],
       filterLists: [],

@@ -317,24 +317,24 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="环境情况"
+                label="卫生度"
                 prop="environment"
               >
                 <el-input
                   v-model="form.environment"
-                  placeholder="请输入环境情况"
+                  placeholder="请输入卫生度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="排队情况"
+                label="拥挤度"
                 prop="queue"
               >
                 <el-input
                   v-model="form.queue"
-                  placeholder="请输入排队情况"
+                  placeholder="请输入拥挤度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>

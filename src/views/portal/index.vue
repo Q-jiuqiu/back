@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-06 23:06:49
+ * @LastEditTime: 2023-09-09 00:07:54
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -129,14 +129,14 @@
         <el-table-column
           prop="queue"
           width="150"
-          label="排队情况"
+          label="拥挤度"
           header-align="center"
           align="center"
         />
         <el-table-column
           prop="environment"
           width="200"
-          label="环境情况"
+          label="卫生度"
           header-align="center"
           align="center"
         />
@@ -302,24 +302,24 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="环境情况"
+                label="卫生度"
                 prop="environment"
               >
                 <el-input
                   v-model="form.environment"
-                  placeholder="请输入环境情况"
+                  placeholder="请输入卫生度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="排队情况"
+                label="拥挤度"
                 prop="queue"
               >
                 <el-input
                   v-model="form.queue"
-                  placeholder="请输入排队情况"
+                  placeholder="请输入拥挤度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
