@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-05 21:45:29
+ * @LastEditTime: 2023-09-11 19:11:41
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -109,6 +109,11 @@
             <el-button
               type="text"
               size="small"
+              @click.stop="handelExploreShop(scope.row)"
+            >探店</el-button>
+            <el-button
+              type="text"
+              size="small"
               @click.stop="handleFaresCondition(scope.row)"
             >票价</el-button>
             <el-button
@@ -144,6 +149,13 @@
         @current-change="handelCurrentPage"
       />
     </div>
+    <!-- 探店 -->
+    <el-dialog
+      width="40%"
+      title="探店"
+      :visible.sync="exploreShopInner"
+      append-to-body
+    ><ExploreShop :explore-id="exploreId" /></el-dialog>
     <!-- 票价情况 -->
     <el-dialog
       width="45%"
@@ -504,8 +516,10 @@
 
 <script>
 import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd, deleteFares } from "@/api";
+import ExploreShop from "@/views/portal/exploreShop.vue";
 export default {
   name: "Portal",
+  components: { ExploreShop },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -612,7 +626,10 @@ export default {
       faresIs: true,
       faresAddIs: false,
       faresInfo: {},
-      faresFindExpId: ""
+      faresFindExpId: "",
+      exploreId: "",
+      exploreShopInner: false
+
     };
   },
   mounted() {
@@ -623,6 +640,14 @@ export default {
     this.getFilterCityListData(this.parentCity);
   },
   methods: {
+    /**
+     * @description: 探店新增
+     * @return {*}
+     */
+    handelExploreShop(row) {
+      this.exploreId = row.id;
+      this.exploreShopInner = true;
+    },
     /**
      * @description: 新增票价
      * @return {*}

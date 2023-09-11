@@ -2,30 +2,71 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-31 20:46:33
+ * @LastEditTime: 2023-09-11 19:04:08
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
-    <el-row v-for="(item,index) in commentDataList" :key="index" style="padding: 0.8rem 0.5rem;">
-      <el-col :span="24">
-        <div class="recommend-list-center">
-          <div class="text">
-            <span class="text-center">{{ item.comment }}</span>
-            <span class="text-button">
-              <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
-            </span>
+    <div v-if="commentAddIs">
+      <el-row v-for="(item,index) in commentDataList" :key="index" style="padding: 0.8rem 0.5rem;">
+        <el-col :span="24">
+          <div class="recommend-list-center">
+            <div class="text">
+              <span class="text-center">{{ item.comment }}</span>
+              <span class="text-button">
+                <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
+                <el-button type="text" size="small" class="button" @click="handelRecommendedEdit(item)">编辑</el-button>
+              </span>
+            </div>
           </div>
-        </div>
-      </el-col>
-    </el-row>
+        </el-col>
+      </el-row>
+    </div>
+    <div v-else>
+      <el-form
+        ref="form"
+        :rules="rules"
+        :model="form"
+        label-width="80px"
+      >
+        <el-form-item
+          label="评论"
+        >
+          <el-input
+            v-model="form.comment"
+            size="medium"
+            style="width: 80%;"
+            placeholder="请输入评论内容"
+          />
+          <el-button
+            type="primary"
+            size="medium"
+            @click="handleCommentAdd"
+          >
+            确定
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <span
+      slot="footer"
+      class="dialog-footer"
+    >
+      <el-button
+        type="primary"
+        size="medium"
+        @click="handleCommentSure"
+      >
+        新增
+      </el-button>
+    </span>
   </div>
 </template>
 
 <script>
-import { getCommentById, deleteComment } from "@/api";
+import { getCommentById, deleteComment, postCommentAdd } from "@/api";
 export default {
   // 组件名称
-  name: "ExploreShop",
+  name: "Comment",
   // 局部注册的组件
   components: {},
   // 组件参数 接收来自父组件的数据
@@ -39,7 +80,11 @@ export default {
   data() {
     return {
       recommendedDataListLoading: true,
-      commentDataList: []
+      commentDataList: [],
+      form: {
+        comment: ""
+      },
+      commentAddIs: true
     };
   },
   // 计算属性
@@ -49,7 +94,6 @@ export default {
     commentId: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log(newVal, oldVal);
         if (newVal !== oldVal) {
           this.getCommentDataList();
         }
@@ -61,6 +105,48 @@ export default {
   },
   // 组件方法
   methods: {
+    /**
+     * @description:编辑
+     * @return {*}
+     */
+    async handelRecommendedEdit(item) {
+      this.commentAddIs = false;
+      this.form = item;
+    },
+    /**
+     * @description:新增
+     * @return {*}
+     */
+    handleCommentSure() {
+      this.commentAddIs = false;
+    },
+    /**
+     * @description: 提交评论
+     * @return {*}
+     */
+    handleCommentAdd() {
+      this.$refs.form.validate(async(valid) => {
+        this.recommendedDataListLoading = true;
+        if (valid) {
+          try {
+            const params = {
+              ...this.form,
+              productId: this.commentId
+            };
+            await postCommentAdd(params);
+            this.commentAddIs = true;
+            this.$message.success(`新增成功`);
+          } catch (error) {
+            this.$message.warning(`新增失败`);
+          } finally {
+            this.getCommentDataList();
+            this.recommendedDataListLoading = false;
+          }
+        } else {
+          return false;
+        }
+      });
+    },
     /**
      * @description: 获取探店数据
      * @return {*}
@@ -133,7 +219,8 @@ export default {
       margin-left: 1rem;
     }
   &-center{
-    padding: 14px;width: 100%;display: inline-block;
+    width: 100%;
+    display: inline-block;
     .title{
       font-size: 16px;
       font-weight: 450;

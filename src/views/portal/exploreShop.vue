@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-31 20:31:51
+ * @LastEditTime: 2023-09-11 18:54:57
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -31,7 +31,6 @@
       slot="footer"
       class="dialog-footer"
     >
-
       <el-button
         type="primary"
         size="medium"
@@ -55,55 +54,17 @@
           label-width="80px"
         >
           <el-form-item
-            label="探店主播"
-            prop="name"
+            label="探店"
+            prop="visitStore"
           >
-            <el-input
-              v-model="form.name"
-              placeholder="请输入探店主播"
-            />
-          </el-form-item>
-
-          <el-form-item
-            label="图片"
-            prop="headSculpture"
-          >
-            <el-upload
-              v-if="!imageBase64"
-              class="upload-demo"
-              action=""
-              :on-remove="handleRemove"
-              :before-remove="beforeRemove"
-              accept=".jpg,.png"
-              multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.headSculpture"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-            >
-              <el-button
-                size="small"
-                type="primary"
-              >头像</el-button>
-              <div
-                slot="tip"
-                class="el-upload__tip"
-              >
-                只能上传jpg/png文件，且不超过1M</div>
-            </el-upload>
-            <div v-else>
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="菜品照片"
-              >
-              <i
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
+            <el-select v-model="visitStoreModel" style="width: 100%;" multiple placeholder="请选择" @change="handelVisitStoreChange">
+              <el-option
+                v-for="(item,index) in visitStoreData"
+                :key="index"
+                :label="item.entName"
+                :value="item.id"
               />
-            </div>
+            </el-select>
           </el-form-item>
         </el-form>
 
@@ -127,7 +88,7 @@
 </template>
 
 <script>
-import { postRestExpAdd, getRestFindExp, deleteExp } from "@/api";
+import { postRestExpAdd, getRestFindExp, deleteExp, getExpUserFind } from "@/api";
 export default {
   // 组件名称
   name: "ExploreShop",
@@ -161,7 +122,10 @@ export default {
       recommendedDataListLoading: true,
       exploreDataList: [],
       addIsEditor: false,
-      exploreAddLoading: false
+      exploreAddLoading: false,
+      visitStoreData: [],
+      visitStoreModel: [],
+      filteredVisitStore: []
     };
   },
   // 计算属性
@@ -183,6 +147,33 @@ export default {
   },
   // 组件方法
   methods: {
+    /**
+     * @description: 获取主播列表
+     * @return {*}
+     */
+    async getVisitStoreDataList() {
+      try {
+        this.tableLoading = true;
+        const { data: { content }} = await getExpUserFind(
+          { pageIndex: 1,
+            pageSize: 1000
+          }
+        );
+        this.visitStoreData = content;
+        console.log(content);
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+    /**
+     * @description:筛选选中值
+     * @return {*}
+     */
+    handelVisitStoreChange(value) {
+      this.filteredVisitStore = this.visitStoreData.filter(idA => value.some(objB => idA.id === objB));
+    },
     /**
      * @description: 获取探店数据
      * @return {*}
@@ -262,6 +253,7 @@ export default {
 
       };
       this.imageBase64 = "";
+      this.getVisitStoreDataList();
     },
 
     /**
@@ -274,11 +266,14 @@ export default {
         this.exploreAddLoading = true;
         if (valid) {
           try {
-            const params = {
-              ...this.form,
-              headSculpture: this.imageBase64
-            };
-            await postRestExpAdd([params]);
+            const params = this.filteredVisitStore.map(item => {
+              return {
+                name: item.entName,
+                headSculpture: item.pictrue,
+                productId: this.exploreId
+              };
+            });
+            await postRestExpAdd(params);
           } catch (error) {
             if (this.addIsEditor) {
               this.$message.warning(`新增失败`);

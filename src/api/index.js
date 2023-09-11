@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-30 22:28:22
+ * @LastEditTime: 2023-09-11 18:22:10
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -42,6 +42,15 @@ export function editShop(params) {
     data: params
   });
 }
+// 新增评论
+export function postCommentAdd(params) {
+  return request({
+    url: `/pro/rest/dbs/add/comment`,
+    method: "post",
+    data: params
+  });
+}
+
 // 新增避坑数据
 export function postEscapeAdd(params) {
   return request({
@@ -81,7 +90,7 @@ export function deleteEscapePit(id) {
 // 获取数据字典数据列表
 export function getDictFind(page, params) {
   return request({
-    url: `/pro/rest/dbs/find/dict/one/${page.pageIndex}/${page.pageSize}`,
+    url: `/pro/rest/dbs/find/levelDist/one/${page.pageIndex}/${page.pageSize}`,
     method: "get",
     params
   });
@@ -251,3 +260,33 @@ export function deleteFares(id) {
   });
 }
 
+// 新增主播
+export function getExpUserAdd(params) {
+  return request({
+    url: `/pro/rest/dbs/expUser/add`,
+    method: "post",
+    data: params
+  });
+}
+// 编辑主播
+export function postFaresFinExp(params) {
+  return request({
+    url: `/pro/rest/dbs/fares/find`,
+    method: "post",
+    data: params
+  });
+}
+// 删除主播
+export function deleteExpUserDel(id) {
+  return request({
+    url: `/pro/rest/dbs/expUser/del/${id}`,
+    method: "delete"
+  });
+}
+// 查询主播
+export function getExpUserFind({ pageIndex, pageSize }) {
+  return request({
+    url: `/pro/rest/dbs/expUser/find/${pageSize}/${pageIndex}`,
+    method: "get"
+  });
+}

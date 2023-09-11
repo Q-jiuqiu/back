@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-09 00:07:54
+ * @LastEditTime: 2023-09-11 18:25:05
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -413,10 +413,9 @@
                 </el-select>
               </el-form-item>
             </el-col>
-
           </el-row>
           <el-form-item
-            label="店铺详情图片"
+            label="图片"
           >
             <el-upload
               class="upload-demo"
@@ -604,6 +603,7 @@ export default {
       commentId: "",
       exploreShopInner: false,
       commentInner: false
+
     };
   },
   watch: {
@@ -617,6 +617,7 @@ export default {
     this.handelSearchSecondType();
   },
   methods: {
+
     /**
      * @description:评论
      * @return {*}
@@ -848,6 +849,7 @@ export default {
           this.form.image2 = item.url;
         }
       });
+
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
