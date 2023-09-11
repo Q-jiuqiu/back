@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-08-27 11:45:47
+ * @LastEditTime: 2023-09-09 13:48:49
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -67,6 +67,12 @@ export const constantRoutes = [
         name: "scape",
         component: () => import("@/views/scape/scape"),
         meta: { title: "景点", icon: "el-icon-s-order" }
+      },
+      {
+        path: "visitStore",
+        name: "visitStore",
+        component: () => import("@/views/visitStore/visitStore"),
+        meta: { title: "探店字典表", icon: "dashboard" }
       },
       /*   {
         path: "comment",
