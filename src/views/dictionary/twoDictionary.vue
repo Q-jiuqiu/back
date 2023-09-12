@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-09 00:11:52
+ * @LastEditTime: 2023-09-11 19:44:30
 -->
 <template>
   <div class="portal-container">
@@ -536,8 +536,11 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            console.log(this.form);
-            this.form.city = this.form.city.join("/");
+            console.log(this.form, Object.prototype.toString.call(this.form.city));
+            if (Object.prototype.toString.call(this.form.city) === "[object Array]") {
+              console.log(this.form.city);
+              this.form.city = this.form.city.join("/");
+            }
             const params = {
               ...this.form,
               image: this.imageBase64

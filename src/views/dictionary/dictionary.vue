@@ -2,15 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-01 22:40:21
--->
-<!--
- * @Author: quling
- * @Date: 2023-04-27 22:44:28
- * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-06 22:35:43
- * @Description: 首页
- * @FilePath: \vue-admin-template\src\views\portal\index.vue
+ * @LastEditTime: 2023-09-11 19:29:14
 -->
 <template>
   <div class="portal-container">
