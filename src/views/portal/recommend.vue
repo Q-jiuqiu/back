@@ -18,7 +18,6 @@
         <div class="recommend-list-center">
           <span class="title">{{ item.foodName }}</span>
           <div class="text">
-            <span class="text-center">{{ item.describe }}</span>
             <span class="text-button">
               <el-button type="text" size="small" class="button" @click="handelRecommendedEditor(item)">编辑</el-button>
               <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
@@ -63,17 +62,6 @@
             />
           </el-form-item>
 
-          <el-form-item
-            label="描述"
-            prop="describe"
-          >
-            <el-input
-              v-model="form.describe"
-              type="textarea"
-              :autosize="{ minRows: 4, maxRows: 8}"
-              placeholder="请输入描述信息"
-            />
-          </el-form-item>
           <el-form-item
             label="图片"
             prop="image"
@@ -159,15 +147,12 @@ export default {
       form: {
         foodName: "",
         image: [],
-        describe: "",
+        describe: "1",
         foodId: this.foodId
       },
       rules: {
         foodName: [
           { required: true, message: "请输入推荐名称", trigger: "blur" }
-        ],
-        describe: [
-          { required: true, message: "请输入描述", trigger: "blur" }
         ],
         image: [
           { required: true, message: "请上传图片", trigger: "blur" }
@@ -253,7 +238,7 @@ export default {
       this.form = {
         foodName: "",
         image: [],
-        describe: "",
+        describe: "1",
         foodId: this.foodId
       };
       this.imageBase64 = [];
