@@ -197,7 +197,7 @@
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
-              accept=".jpg,.png"
+              accept=".jpg,.png,.webp"
               multiple
               :limit="1"
               :on-exceed="handleExceed"
@@ -569,7 +569,7 @@ export default {
       this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg","webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;

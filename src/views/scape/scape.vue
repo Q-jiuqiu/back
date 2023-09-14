@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-12 23:00:41
+ * @LastEditTime: 2023-09-14 09:44:14
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -155,7 +155,7 @@
       title="推荐"
       :visible.sync="exploreShopInner"
       append-to-body
-    ><ExploreShop :explore-id="exploreId" /></el-dialog>
+    ><Recommend :food-id="exploreId" /></el-dialog>
     <!-- 票价情况 -->
     <el-dialog
       width="45%"
@@ -438,7 +438,7 @@
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
-              accept=".jpg,.png"
+              accept=".jpg,.png,.webp"
               multiple
               :limit="2"
               :file-list="imageBase64"
@@ -507,10 +507,10 @@
 
 <script>
 import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd, deleteFares } from "@/api";
-import ExploreShop from "@/views/portal/exploreShop.vue";
+import Recommend from "@/views/portal/recommend.vue";
 export default {
   name: "Portal",
-  components: { ExploreShop },
+  components: { Recommend },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -1012,7 +1012,7 @@ export default {
     handleFileChange(file) {
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
