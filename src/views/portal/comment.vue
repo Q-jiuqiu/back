@@ -24,7 +24,6 @@
     <div v-else>
       <el-form
         ref="form"
-        :rules="rules"
         :model="form"
         label-width="80px"
       >

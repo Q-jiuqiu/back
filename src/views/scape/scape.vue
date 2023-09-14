@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 19:11:41
+ * @LastEditTime: 2023-09-14 09:44:14
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -110,7 +110,7 @@
               type="text"
               size="small"
               @click.stop="handelExploreShop(scope.row)"
-            >探店</el-button>
+            >推荐</el-button>
             <el-button
               type="text"
               size="small"
@@ -152,10 +152,10 @@
     <!-- 探店 -->
     <el-dialog
       width="40%"
-      title="探店"
+      title="推荐"
       :visible.sync="exploreShopInner"
       append-to-body
-    ><ExploreShop :explore-id="exploreId" /></el-dialog>
+    ><Recommend :food-id="exploreId" /></el-dialog>
     <!-- 票价情况 -->
     <el-dialog
       width="45%"
@@ -165,6 +165,11 @@
     >
       <div class="fares">
         <div v-if="faresIs" class="fares-list">
+          <el-button
+            type="primary"
+            size="medium"
+            @click="handelFaresAddData"
+          > 新增票价</el-button>
           <el-table
             ref="Table"
             v-loading="tableLoading"
@@ -235,7 +240,7 @@
               <el-input v-model="faresForm.child" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="handelSubmitFaresForm('faresForm')">提交</el-button>
+              <el-button type="primary" :loading="addFaresBtnLoading" @click="handelSubmitFaresForm('faresForm')">提交</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -329,12 +334,12 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="卫生度"
+                label="预约"
                 prop="environment"
               >
                 <el-input
                   v-model="form.environment"
-                  placeholder="请输入卫生度"
+                  placeholder="请输入是否需要预约"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
@@ -429,16 +434,15 @@
             label="图片"
           >
             <el-upload
-              v-if="!imageBase64"
               class="upload-demo"
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
-              accept=".jpg,.png"
+              accept=".jpg,.png,.webp"
               multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
+              :limit="2"
+              :file-list="imageBase64"
+              list-type="picture"
               :auto-upload="false"
               :on-change="handleFileChange"
             >
@@ -452,20 +456,7 @@
               >
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
-            <div v-else>
 
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="景区照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
           </el-form-item>
           <el-form-item
             label="简介"
@@ -516,10 +507,10 @@
 
 <script>
 import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd, deleteFares } from "@/api";
-import ExploreShop from "@/views/portal/exploreShop.vue";
+import Recommend from "@/views/portal/recommend.vue";
 export default {
   name: "Portal",
-  components: { ExploreShop },
+  components: { Recommend },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -567,7 +558,7 @@ export default {
         capitaConsumption: "",
         region: ""
       },
-      imageBase64: "", // 图片Base64编码
+      imageBase64: [], // 图片Base64编码
       rules: {
         name: [
           { required: true, message: "请输入景区名称", trigger: "blur" }
@@ -586,6 +577,7 @@ export default {
       },
       addBtnLoading: false, // 添加景区loading
       tableLoading: false, // 表格loading
+      addFaresBtnLoading: false,
       changeImage: false, // 是否展示修改图片按钮
       searchName: "", // 搜索关键字
       city: "",
@@ -632,6 +624,17 @@ export default {
 
     };
   },
+  // 侦听器
+  watch: {
+    faresFindExpId: {
+      deep: true,
+      handler(newVal, oldVal) {
+        if (newVal !== oldVal) {
+          this.handleFaresCondition({ id: newVal });
+        }
+      }
+    }
+  },
   mounted() {
     this.initTableData({
       type: this.form.type
@@ -640,6 +643,13 @@ export default {
     this.getFilterCityListData(this.parentCity);
   },
   methods: {
+    /**
+     * @description:
+     * @return {*}
+     */
+    handelFaresAddData() {
+      this.faresIs = false;
+    },
     /**
      * @description: 探店新增
      * @return {*}
@@ -678,15 +688,28 @@ export default {
      * @return {*}
      */
     async  handleFaresDel(row) {
-      const data = await deleteFares(row.id);
-      if (data) {
-        const { data } = await getFaresFindExp(this.faresFindExpId);
-        if (data.length) {
-          this.faresList = data;
-        }
-      } else {
-        this.$message.error("删除失败");
-      }
+      this.$confirm("此操作将永久删除选中景区, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      })
+        .then(async() => {
+          this.tableLoading = true;
+          try {
+            await deleteFares(row.id);
+            this.handleFaresCondition({ id: this.faresFindExpId });
+          } catch (error) {
+            this.$message.warning("删除失败");
+          } finally {
+            this.tableLoading = false;
+          }
+        })
+        .catch(() => {
+          this.$message({
+            type: "info",
+            message: "已取消删除"
+          });
+        });
     },
     /**
      * @description: 票价情况
@@ -694,11 +717,14 @@ export default {
      * @return {*}
      */
     async handleFaresCondition(row) {
+      this.faresList = [];
       this.faresInner = true;
       this.faresFindExpId = row.id;
       const { data } = await getFaresFindExp(row.id);
       if (data.length) {
         this.faresList = data;
+      } else {
+        this.faresList = [];
       }
     },
     /**
@@ -709,15 +735,23 @@ export default {
     handelSubmitFaresForm(formName) {
       this.$refs[formName].validate(async(valid) => {
         if (valid) {
+          this.addFaresBtnLoading = true;
+          this.faresForm.productId = this.faresFindExpId;
           if (this.faresAddIs) {
             this.faresForm.id = "";
           } else {
             this.faresForm.id = this.faresInfo.id;
           }
-          const data = await postDbsFaresAdd([this.faresForm]);
-          this.faresInner = false;
-          this.faresIs = true;
-          data && this.$message.success("新建票价成功");
+          try {
+            const data = await postDbsFaresAdd([this.faresForm]);
+            this.handleFaresCondition({ id: this.faresFindExpId });
+            this.faresIs = true;
+            data && this.$message.success("新建票价成功");
+          } catch (error) {
+            this.$message.error("新建票价失败");
+          } finally {
+            this.addFaresBtnLoading = false;
+          }
         } else {
           return false;
         }
@@ -842,8 +876,7 @@ export default {
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
+          this.imageBase64.push({ url: row[key] });
         } else {
           this.form[key] = row[key];
         }
@@ -863,11 +896,17 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-
+            this.imageBase64.forEach((item, index) => {
+              if (index === 0) {
+                this.form.image = item.url;
+              }
+              if (index === 1) {
+                this.form.image2 = item.url;
+              }
+            });
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const params = {
-              ...this.form,
-              image: this.imageBase64
+              ...this.form
             };
             if (!this.canEdit && !this.isEdit) {
               await addShop(params);
@@ -952,8 +991,7 @@ export default {
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [];
+          this.imageBase64.push({ url: row[key] });
         } else {
           this.form[key] = row[key];
         }
@@ -967,15 +1005,14 @@ export default {
           this.form[key] = "";
         }
       }
-      this.imageBase64 = "";
+      this.imageBase64 = [];
     },
 
     // 文件选中
     handleFileChange(file) {
-      this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
@@ -983,14 +1020,17 @@ export default {
       // 创建文件读取实例
       const fileReader = new FileReader();
       fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
+      fileReader.onload = (e, index) => {
+        this.imageBase64.push({
+          name: `image${index}`,
+          url: e.target.result
+        });
         this.$refs.form.validate();
       };
     },
 
     handleRemove(file, fileList) {
-      this.form.image = [];
+      this.imageBase64 = fileList;
     },
     handleExceed() {
       this.$message.warning(`当前限制选择 1 个文件`);
@@ -1003,8 +1043,7 @@ export default {
     },
     // 修改图片
     handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
+      this.imageBase64 = [];
     }
   }
 };

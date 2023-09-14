@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-09 13:57:59
+ * @LastEditTime: 2023-09-14 17:11:38
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -18,7 +18,6 @@
         <div class="recommend-list-center">
           <span class="title">{{ item.foodName }}</span>
           <div class="text">
-            <span class="text-center">{{ item.describe }}</span>
             <span class="text-button">
               <el-button type="text" size="small" class="button" @click="handelRecommendedEditor(item)">编辑</el-button>
               <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
@@ -64,27 +63,15 @@
           </el-form-item>
 
           <el-form-item
-            label="描述"
-            prop="describe"
-          >
-            <el-input
-              v-model="form.describe"
-              type="textarea"
-              :autosize="{ minRows: 4, maxRows: 8}"
-              placeholder="请输入描述信息"
-            />
-          </el-form-item>
-          <el-form-item
             label="图片"
             prop="image"
           >
             <el-upload
-              v-if="!imageBase64"
               class="upload-demo"
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
-              accept=".jpg,.png"
+              accept=".jpg,.png,.webp"
               multiple
               :limit="1"
               :on-exceed="handleExceed"
@@ -102,19 +89,7 @@
               >
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
-            <div v-else>
 
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="菜品照片"
-              >
-              <i
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
           </el-form-item>
         </el-form>
 
@@ -159,15 +134,12 @@ export default {
       form: {
         foodName: "",
         image: [],
-        describe: "",
+        describe: "1",
         foodId: this.foodId
       },
       rules: {
         foodName: [
           { required: true, message: "请输入推荐名称", trigger: "blur" }
-        ],
-        describe: [
-          { required: true, message: "请输入描述", trigger: "blur" }
         ],
         image: [
           { required: true, message: "请上传图片", trigger: "blur" }
@@ -253,7 +225,7 @@ export default {
       this.form = {
         foodName: "",
         image: [],
-        describe: "",
+        describe: "1",
         foodId: this.foodId
       };
       this.imageBase64 = [];
@@ -313,7 +285,7 @@ export default {
       this.form.image = [file];
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;

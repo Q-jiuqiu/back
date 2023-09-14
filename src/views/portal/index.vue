@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 18:25:05
+ * @LastEditTime: 2023-09-12 22:27:22
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -127,14 +127,14 @@
           align="center"
         />
         <el-table-column
-          prop="queue"
+          prop="environment"
           width="150"
           label="拥挤度"
           header-align="center"
           align="center"
         />
         <el-table-column
-          prop="environment"
+          prop="queue"
           width="200"
           label="卫生度"
           header-align="center"
@@ -302,24 +302,24 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="卫生度"
+                label="拥挤度"
                 prop="environment"
               >
                 <el-input
                   v-model="form.environment"
-                  placeholder="请输入卫生度"
+                  placeholder="请输入拥挤度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item
-                label="拥挤度"
+                label="卫生度"
                 prop="queue"
               >
                 <el-input
                   v-model="form.queue"
-                  placeholder="请输入拥挤度"
+                  placeholder="请输入卫生度"
                   :disabled="canEdit && !isEdit "
                 />
               </el-form-item>
@@ -422,7 +422,7 @@
               action=""
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
-              accept=".jpg,.png"
+              accept=".jpg,.png,.webp"
               multiple
               :limit="2"
               :file-list="imageBase64"
@@ -823,7 +823,6 @@ export default {
         if (key.includes("image")) {
           if (row[key]) {
             this.imageBase64.push({ url: row[key] });
-            // this.form.image.push({ url: row[key] });
           }
         } else {
           this.form[key] = row[key];
@@ -963,7 +962,7 @@ export default {
     handleFileChange(file) {
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;

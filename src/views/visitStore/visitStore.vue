@@ -117,7 +117,7 @@
                 :file-list="form.pictrue"
                 :on-remove="handleRemove"
                 :before-remove="beforeRemove"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 multiple
                 :limit="1"
                 list-type="picture"
@@ -240,7 +240,7 @@ export default {
     handleFileChange(file) {
       this.form.pictrue = [];
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg"];
+      const imageList = ["png", "gif", "jpg", "jpeg","webp"];
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
