@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-14 09:44:14
+ * @LastEditTime: 2023-09-15 14:48:42
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -265,7 +265,7 @@
           ref="form"
           :rules="rules"
           :model="form"
-          label-width="80px"
+          label-width="100px"
         >
           <el-form-item
             label="景区名称"
@@ -423,10 +423,10 @@
           <el-row>
             <el-col :span="12">
               <el-form-item
-                label="购票地址"
+                label="购票小程序ID"
                 :disabled="canEdit && !isEdit "
               >
-                <el-input v-model="form.region" placeholder="请输入地址" />
+                <el-input v-model="form.region" placeholder="请输入ID号" />
               </el-form-item>
             </el-col>
           </el-row>

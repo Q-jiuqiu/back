@@ -158,7 +158,6 @@ export default {
     foodId: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log(newVal, oldVal);
         if (newVal !== oldVal) {
           this.getRecommendedList();
         }
