@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 18:32:10
+ * @LastEditTime: 2023-09-19 19:55:34
 -->
 <template>
   <div class="portal-container">
@@ -38,7 +38,7 @@
           align="center"
         >
           <template slot-scope="scope">
-            <img style="width: 100px; height: 100px;" :src="scope.row.pictrue">
+            <img style="width: 100px; height: 100px;" :src="scope.row.pictrue" :alt="scope.row.entName">
           </template>
         </el-table-column>
         <el-table-column
@@ -112,21 +112,23 @@
               label="头像"
             >
               <el-upload
+                ref="uploadFile"
                 class="upload-demo"
                 action=""
-                :file-list="form.pictrue"
+                :on-change="handleFileChange"
+                :file-list="fileList"
                 :on-remove="handleRemove"
                 :before-remove="beforeRemove"
                 accept=".jpg,.png,.webp"
                 multiple
-                :limit="1"
+                :limit="2"
                 list-type="picture"
                 :auto-upload="false"
-                :on-change="handleFileChange"
               >
-                <el-button size="small" type="primary">点击上传</el-button>
+                <el-button slot="trigger" size="small" type="primary">点击上传</el-button>
                 <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
-              </el-upload></el-form-item>
+              </el-upload>
+            </el-form-item>
           </el-row>
 
         </el-form>
@@ -167,19 +169,23 @@ export default {
       dialogVisible: false,
       form: {
         entName: "",
-        pictrue: []
+        pictrue: "",
+        file: [],
+        id: ""
       },
       rules: {
         entName: [
           { required: true, message: "请输入名称", trigger: "blur" }
         ]
       },
-      addBtnLoading: false, // 添加门店loading
-      tableLoading: false, // 表格loading
+      addBtnLoading: false,
+      tableLoading: false,
       pageIndex: 1,
       pageSize: 20,
       dialogTitle: "新增探店字典表",
-      totalElements: 0
+      totalElements: 0,
+      isEdit: false,
+      fileList: []
 
     };
   },
@@ -188,19 +194,130 @@ export default {
   },
   methods: {
     /**
-     * @description:
+     * @description: 获取主播列表
+     * @return {*}
+     */
+    async getVisitStoreDataList() {
+      try {
+        this.tableLoading = true;
+        const { data: { content, totalElements }} = await getExpUserFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }
+        );
+        this.tableVisitStoreData = content;
+        this.totalElements = totalElements;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+    /**
+     * @description:编辑
      * @return {*}
      */
     handleVisitStoreEdit(row) {
       this.dialogTitle = "编辑探店信息数据字典";
       this.dialogVisible = true;
+      this.isEdit = true;
       const key = Object.keys(row);
+      console.log(row);
       key.forEach((key) => {
         this.form[key] = row[key];
+        if (key === "pictrue") {
+          this.fileList = [{ name: row.name, url: row[key] }];
+        }
+      });
+    },
+
+    /**
+     * @description:关闭新增、编辑
+     * @return {*}
+     */
+    handleDialogClose(done) {
+      this.dialogVisible = false;
+      done();
+    },
+    /**
+     * @description:上传文件
+     * @return {*}
+     */
+    handleFileChange(file, fileList) {
+      if (this.$refs.uploadFile.uploadFiles.length > 1) {
+        this.$refs.uploadFile.uploadFiles.shift();
+      }
+      const fileType = file.name.split(".").reverse()[0].toLowerCase();
+      const imageList = ["png", "jpg", "jpeg", "webp"];
+      if (!imageList.includes(fileType)) {
+        alert("文件格式不正确");
+        return false;
+      } else {
+        this.form.file = file.raw;
+        this.fileList = fileList;
+      }
+    },
+    handleRemove(file, fileList) {
+      this.form.pictrue = fileList;
+    },
+    beforeRemove() {
+      return this.$confirm(`确定移除？`, "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+      });
+    },
+
+    // 分页
+    handelCurrentPage(index) {
+      this.pageIndex = index;
+      this.getVisitStoreDataList();
+    },
+
+    // 新增
+    handleVisitStoreAdd() {
+      this.dialogVisible = true;
+      this.dialogTitle = "新增数据字典";
+    },
+
+    /**
+     * @description: 提交表单编辑或新增数据
+     * @return {*}
+     */
+    handleFormConfirm() {
+      this.$refs.form.validate(async(valid) => {
+        if (valid) {
+          try {
+            console.log(this.form);
+            const { entName, pictrue, id } = this.form;
+            let { file } = this.form;
+            this.addBtnLoading = true;
+
+            const formData = new FormData();
+            formData.append("entName", entName);
+            if (Object.prototype.toString.call(file) === "[object String]") {
+              file = new File([Blob], pictrue, `${entName}.webp`);
+            }
+            formData.append("file", file);
+            if (this.isEdit) {
+              formData.append("id", id);
+              formData.append("pictrue", pictrue);
+            }
+            const { data } = await getExpUserAdd(formData);
+            this.$message.success(`新增成功${data}`);
+          } catch (error) {
+            this.$message.error(`新增失败`);
+          } finally {
+            this.getVisitStoreDataList();
+            this.addBtnLoading = false;
+            this.dialogVisible = false;
+          }
+        } else {
+          return false;
+        }
       });
     },
     /**
-     * @description:
+     * @description:删除选中字典表
      * @return {*}
      */
     handleVisitStoreDel(row) {
@@ -224,106 +341,6 @@ export default {
             message: "已取消删除"
           });
         });
-    },
-    /**
-     * @description:关闭新增、编辑
-     * @return {*}
-     */
-    handleDialogClose(done) {
-      this.dialogVisible = false;
-      done();
-    },
-    /**
-     * @description:上传文件
-     * @return {*}
-     */
-    handleFileChange(file) {
-      this.form.pictrue = [];
-      const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg","webp"];
-      if (!imageList.includes(fileType)) {
-        alert("文件格式不正确");
-        return false;
-      }
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e, index) => {
-        this.$refs.form.validate();
-        this.form.pictrue.push({
-          name: `image${index}`,
-          url: e.target.result
-        });
-      };
-    },
-    handleRemove(file, fileList) {
-      this.form.pictrue = fileList;
-    },
-    beforeRemove() {
-      return this.$confirm(`确定移除？`, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消"
-      });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.form.pictrue = [];
-    },
-    /**
-     * @description: 获取主播列表
-     * @return {*}
-     */
-    async getVisitStoreDataList() {
-      try {
-        this.tableLoading = true;
-        const { data: { content, totalElements }} = await getExpUserFind(
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }
-        );
-        this.tableVisitStoreData = content;
-        this.totalElements = totalElements;
-      } catch (error) {
-        this.$message.warning("获取数据失败");
-      } finally {
-        this.tableLoading = false;
-      }
-    },
-
-    // 分页
-    handelCurrentPage(index) {
-      this.pageIndex = index;
-      this.getVisitStoreDataList();
-    },
-
-    // 新增
-    handleVisitStoreAdd() {
-      this.dialogVisible = true;
-      this.dialogTitle = "新增数据字典";
-    },
-
-    // 提交表单
-    handleFormConfirm() {
-      this.$refs.form.validate(async(valid) => {
-        if (valid) {
-          try {
-            this.addBtnLoading = true;
-            const param = [{
-              entName: this.form.entName,
-              pictrue: this.form.pictrue[0].url
-            }];
-            const data = await getExpUserAdd(param);
-            this.$message.success(`新增成功`);
-          } catch (error) {
-            this.$message.error(`新增失败`);
-          } finally {
-            this.getVisitStoreDataList();
-            this.addBtnLoading = false;
-            this.dialogVisible = false;
-          }
-        } else {
-          return false;
-        }
-      });
     }
   }
 };

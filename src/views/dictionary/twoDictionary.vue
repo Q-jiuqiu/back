@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 19:44:30
+ * @LastEditTime: 2023-09-18 23:10:10
 -->
 <template>
   <div class="portal-container">
@@ -192,17 +192,14 @@
             label="图片"
           >
             <el-upload
-              v-if="!imageBase64"
               class="upload-demo"
               action=""
-              :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png,.webp"
-              multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
+              :file-list="fileList"
               :auto-upload="false"
+              :limit="1"
+              list-type="picture"
               :on-change="handleFileChange"
             >
               <el-button
@@ -215,20 +212,7 @@
               >
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
-            <div v-else>
 
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="门店照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
           </el-form-item>
           <el-row>
             <el-form-item
@@ -265,14 +249,13 @@
         </el-button>
       </span>
     </el-dialog>
-
   </div>
 </template>
 
 <script>
 import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 export default {
-  name: "Portal",
+  name: "TwoDictionary",
 
   data() {
     return {
@@ -281,10 +264,9 @@ export default {
       dialogVisible: false, // 对话框显隐
       dialogTitle: "新增数据字典",
       canEdit: false, // 能否编辑 是否显示编辑图标
-      isEdit: true, // 是否编辑
-      imageBase64: "", // 图片Base64编码
       searchData: "",
       searchCityData: "",
+      fileList: [],
       form: {
         name: "",
         type: "美食",
@@ -292,7 +274,9 @@ export default {
         parentName: "",
         level: 3,
         image: [],
-        city: ""
+        file: [],
+        city: "",
+        id: ""
       },
       rules: {
         city: [
@@ -335,11 +319,39 @@ export default {
     };
   },
   mounted() {
-    this.getFilterList();
-    this.initTableData();
     this.getFilterCityListData();
+    this.getFilterList();
+    this.getTwoDictionaryDataList();
   },
   methods: {
+    /**
+     * @description: 数据初始化
+     * @return {*}
+     */
+
+    async getTwoDictionaryDataList() {
+      try {
+        this.tableLoading = true;
+        const { data: {
+          content, totalElements
+        }} = await getDictFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }, {
+            type: "美食",
+            parentName: this.searchData === "所有" ? "" : this.searchData,
+            level: 3,
+            city: "北京市"// this.searchCityData[ this.searchCityData.length - 1]
+          }
+        );
+        this.totalElements = totalElements;
+        this.tableData = content;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
     /* 搜索数据 */
     async  handelSearchTableData() {
       try {
@@ -377,6 +389,7 @@ export default {
 
     /* 城市数据 */
     async  getFilterCityListData() {
+      console.log(this.parentCity);
       const { data } = await getCityFindPage(this.parentCity);
       function convertData(data) {
         return data.map(item => ({
@@ -414,47 +427,23 @@ export default {
     // 编辑
     handleEdit(row) {
       this.dialogTitle = "编辑门店信息数据字典";
-      this.isEdit = true;
       this.canEdit = true;
       this.dialogVisible = true;
       const key = Object.keys(row);
+      console.log(row);
       key.forEach((key) => {
+        this.form[key] = row[key];
         if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
+          this.fileList = [{ name: row.name, url: row[key] }];
         }
       });
+      console.log(this.form);
     },
-    // 获取列表
-    async initTableData() {
-      try {
-        this.tableLoading = true;
-        const { data: {
-          content, totalElements
-        }} = await getDictFind(
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }, {
-            type: "美食",
-            parentName: this.searchData === "所有" ? "" : this.searchData,
-            level: 3,
-            city: this.searchCityData[ this.searchCityData.length - 1]
-          }
-        );
-        this.totalElements = totalElements;
-        this.tableData = content;
-      } catch (error) {
-        this.$message.warning("获取数据失败");
-      } finally {
-        this.tableLoading = false;
-      }
-    },
+
     // 分页
     handelCurrentPage(index) {
       this.pageIndex = index;
-      this.initTableData();
+      this.getTwoDictionaryDataList();
     },
 
     // 重置搜索条件
@@ -463,11 +452,10 @@ export default {
       this.city = "";
       this.region = "";
       this.searchData = "";
-      this.initTableData();
+      this.getTwoDictionaryDataList();
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -478,12 +466,13 @@ export default {
       }
       target.blur();
     },
-    // 增加门店-打开对话框
+    // 新增
     handleShopAdd(event) {
       this.dialogTitle = "新增数据字典";
       this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
+      this.fileList = [];
     },
     // 关闭对话
     handleDialogClose(done) {
@@ -507,7 +496,7 @@ export default {
           try {
             await deleteDictPit(item.id);
             this.$message.success("删除成功!");
-            this.initTableData();
+            this.getTwoDictionaryDataList();
           } catch (error) {
             this.$message.warning("删除失败");
           }
@@ -526,9 +515,13 @@ export default {
           this.form[key] = "";
         }
       }
-      this.imageBase64 = "";
+      this.fileList = [];
     },
-    // 提交表单
+
+    /**
+     * @description: 新增或编辑数据并提交数据
+     * @return {*}
+     */
     handleFormConfirm() {
       this.form.type = "美食";
       this.form.level = 3;
@@ -536,26 +529,31 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            console.log(this.form, Object.prototype.toString.call(this.form.city));
             if (Object.prototype.toString.call(this.form.city) === "[object Array]") {
-              console.log(this.form.city);
               this.form.city = this.form.city.join("/");
             }
-            const params = {
-              ...this.form,
-              image: this.imageBase64
-            };
-            console.log(params);
+            const formData = new FormData();
+            formData.append("type", this.form.type);
+            formData.append("name", this.form.name);
+            formData.append("city", this.form.city);
+            formData.append("file", this.form.file);
+            formData.append("level", this.form.level);
+            formData.append("remark", this.form.remark);
+            formData.append("parentName", this.form.parentName);
+            console.log(this.canEdit);
             if (this.canEdit) {
-              await postDictEdit(params); this.$message.success(`编辑成功`);
+              formData.append("image", this.form.image);
+              formData.append("id", this.form.id);
+              await postDictEdit(formData); this.$message.success(`编辑成功`);
             } else {
-              await postDictAdd(params); this.$message.success(`新增成功`);
+              await postDictAdd(formData); this.$message.success(`新增成功`);
             }
             this.resetForm();
             this.dialogVisible = false;
-            await this.initTableData();
+            this.canEdit = false;
+            await this.getTwoDictionaryDataList();
           } catch (error) {
-            this.$message.error(`新增失败`);
+            this.$message.error(`操作数据失败！${error}`);
           } finally {
             this.addBtnLoading = false;
           }
@@ -564,41 +562,43 @@ export default {
         }
       });
     },
-    // 文件选中
+    /**
+     * @description: 文件上传
+     * @param {*} file
+     * @return {*}
+     */
     handleFileChange(file) {
-      this.form.image = [file];
+      console.log(file);
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg","webp"];// 图片文件格式列表
+      const imageList = ["png", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
+      } else {
+        this.form.file = file.raw;
+        // 创建文件读取实例
+        const fileReader = new FileReader();
+        fileReader.readAsDataURL(file.raw);
+        fileReader.onload = (e, index) => {
+          this.fileList.push({
+            name: `image${index}`,
+            url: e.target.result
+          });
+        };
       }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
-        this.$refs.form.validate();
-      };
     },
-
-    handleRemove(file, fileList) {
-      this.form.image = [];
-    },
-    handleExceed() {
-      this.$message.warning(`当前限制选择 1 个文件`);
-    },
+    /**
+     * @description: 图片删除确定
+     * @param {*} file
+     * @param {*} fileList
+     * @return {*}
+     */
     beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
+      return this.$confirm(`确定移除 ${file.name}?`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
     }
   }
 };
