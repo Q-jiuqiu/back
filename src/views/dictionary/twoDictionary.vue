@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-18 23:10:10
+ * @LastEditTime: 2023-09-19 21:12:19
 -->
 <template>
   <div class="portal-container">
@@ -192,27 +192,22 @@
             label="图片"
           >
             <el-upload
+              ref="uploadFile"
               class="upload-demo"
               action=""
+              :on-change="handleFileChange"
+              :file-list="fileList"
+              :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png,.webp"
-              :file-list="fileList"
-              :auto-upload="false"
-              :limit="1"
+              multiple
+              :limit="2"
               list-type="picture"
-              :on-change="handleFileChange"
+              :auto-upload="false"
             >
-              <el-button
-                size="small"
-                type="primary"
-              >点击上传</el-button>
-              <div
-                slot="tip"
-                class="el-upload__tip"
-              >
-                只能上传jpg/png文件，且不超过2M</div>
+              <el-button slot="trigger" size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">只能上传jpg/png/webp文件，且不超过500kb</div>
             </el-upload>
-
           </el-form-item>
           <el-row>
             <el-form-item
@@ -389,7 +384,6 @@ export default {
 
     /* 城市数据 */
     async  getFilterCityListData() {
-      console.log(this.parentCity);
       const { data } = await getCityFindPage(this.parentCity);
       function convertData(data) {
         return data.map(item => ({
@@ -437,7 +431,6 @@ export default {
           this.fileList = [{ name: row.name, url: row[key] }];
         }
       });
-      console.log(this.form);
     },
 
     // 分页
@@ -492,7 +485,6 @@ export default {
         type: "warning"
       })
         .then(async() => {
-          console.log(item);
           try {
             await deleteDictPit(item.id);
             this.$message.success("删除成功!");
@@ -533,16 +525,20 @@ export default {
               this.form.city = this.form.city.join("/");
             }
             const formData = new FormData();
+            let { file } = this.form;
+            const { name, image } = this.form;
+            if (Object.prototype.toString.call(file) === "[object String]") {
+              file = new File([Blob], image, `${name}.webp`);
+            }
             formData.append("type", this.form.type);
             formData.append("name", this.form.name);
             formData.append("city", this.form.city);
-            formData.append("file", this.form.file);
+            formData.append("file", file);
             formData.append("level", this.form.level);
             formData.append("remark", this.form.remark);
             formData.append("parentName", this.form.parentName);
-            console.log(this.canEdit);
             if (this.canEdit) {
-              formData.append("image", this.form.image);
+              formData.append("image", image);
               formData.append("id", this.form.id);
               await postDictEdit(formData); this.$message.success(`编辑成功`);
             } else {
@@ -567,25 +563,18 @@ export default {
      * @param {*} file
      * @return {*}
      */
-    handleFileChange(file) {
-      console.log(file);
-      // 检验选择文件格式
+    handleFileChange(file, fileList) {
+      if (this.$refs.uploadFile.uploadFiles.length > 1) {
+        this.$refs.uploadFile.uploadFiles.shift();
+      }
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "jpg", "jpeg", "webp"];// 图片文件格式列表
+      const imageList = ["png", "jpg", "jpeg", "webp"];
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
       } else {
         this.form.file = file.raw;
-        // 创建文件读取实例
-        const fileReader = new FileReader();
-        fileReader.readAsDataURL(file.raw);
-        fileReader.onload = (e, index) => {
-          this.fileList.push({
-            name: `image${index}`,
-            url: e.target.result
-          });
-        };
+        this.fileList = fileList;
       }
     },
     /**

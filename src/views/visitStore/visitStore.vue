@@ -126,7 +126,7 @@
                 :auto-upload="false"
               >
                 <el-button slot="trigger" size="small" type="primary">点击上传</el-button>
-                <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                <div slot="tip" class="el-upload__tip">只能上传jpg/png/webp文件，且不超过500kb</div>
               </el-upload>
             </el-form-item>
           </el-row>
@@ -222,7 +222,6 @@ export default {
       this.dialogVisible = true;
       this.isEdit = true;
       const key = Object.keys(row);
-      console.log(row);
       key.forEach((key) => {
         this.form[key] = row[key];
         if (key === "pictrue") {
@@ -257,9 +256,19 @@ export default {
         this.fileList = fileList;
       }
     },
+    /**
+     * @description: 删除上传文件
+     * @param {*} file
+     * @param {*} fileList
+     * @return {*}
+     */
     handleRemove(file, fileList) {
       this.form.pictrue = fileList;
     },
+    /**
+     * @description: 删除文件前提示
+     * @return {*}
+     */
     beforeRemove() {
       return this.$confirm(`确定移除？`, "提示", {
         confirmButtonText: "确定",
@@ -267,13 +276,20 @@ export default {
       });
     },
 
-    // 分页
+    /**
+     * @description: 分页
+     * @param {*} index
+     * @return {*}
+     */
     handelCurrentPage(index) {
       this.pageIndex = index;
       this.getVisitStoreDataList();
     },
 
-    // 新增
+    /**
+     * @description: 点击新增按钮
+     * @return {*}
+     */
     handleVisitStoreAdd() {
       this.dialogVisible = true;
       this.dialogTitle = "新增数据字典";
@@ -287,7 +303,6 @@ export default {
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
-            console.log(this.form);
             const { entName, pictrue, id } = this.form;
             let { file } = this.form;
             this.addBtnLoading = true;
