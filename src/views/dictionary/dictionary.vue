@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 18:52:12
+ * @LastEditTime: 2023-09-21 18:57:57
 -->
 <template>
   <div class="portal-container">
@@ -180,7 +180,7 @@ export default {
     // 新增
     handleShopAdd() {
       const faresData = {
-        city: "成都市",
+        city: "四川省/成都市",
         name: "",
         parentName: this.searchCityData,
         type: this.searchCityData,
@@ -231,7 +231,7 @@ export default {
           }
         }
         console.log(formData);
-        if (this.dictionaryEdit) {
+        if (index) {
           await postDictEdit(formData);
         } else {
           await postDictAdd(formData);

@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-20 18:40:59
+ * @LastEditTime: 2023-09-21 19:18:24
 -->
 <template>
   <div class="portal-container">
@@ -66,31 +66,24 @@
         <el-table-column
           prop="city"
           label="城市"
-          width="120"
+          width="420"
           header-align="center"
           align="center"
         />
         <el-table-column
           prop="parentName"
-          label="二级类"
-          width="120"
-          header-align="center"
-          align="center"
-        />
-        <el-table-column
-          prop="name"
-          label="三级类"
+          label="一级分类"
           width="200"
           header-align="center"
           align="center"
         />
         <el-table-column
-          prop="remark"
-          label="描述"
+          prop="name"
+          label="二级分类"
           header-align="center"
-          align="left"
-          :show-overflow-tooltip="true"
+          align="center"
         />
+
         <el-table-column
           label="操作"
           width="150"
@@ -268,8 +261,6 @@ export default {
         remark: "",
         parentName: "",
         level: 3,
-        image: [],
-        file: [],
         city: "",
         id: ""
       },
@@ -289,7 +280,7 @@ export default {
       filterCityList: [],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 20,
       tableDataOne: [],
       filterList: [],
       filterLists: [],
@@ -347,7 +338,10 @@ export default {
         this.tableLoading = false;
       }
     },
-    /* 搜索数据 */
+    /**
+     * @description: 搜索数据
+     * @return {*}
+     */
     async  handelSearchTableData() {
       try {
         this.tableLoading = true;
@@ -376,13 +370,17 @@ export default {
         this.totalElements = totalElements;
         this.tableData = content;
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
 
-    /* 城市数据 */
+    /**
+     * @description: 城市数据
+     * @return {*}
+     */
+    /*  */
     async  getFilterCityListData() {
       const { data } = await getCityFindPage(this.parentCity);
       function convertData(data) {
@@ -397,8 +395,11 @@ export default {
       const outputData = convertData(data);
       this.filterCityList = outputData;
     },
-    /* 获取筛选条件 */
-    async  getFilterList() {
+    /**
+     * @description: 获取筛选条件
+     * @return {*}
+     */
+    async getFilterList() {
       const { data: {
         content
       }} = await getDictFind(
@@ -424,13 +425,17 @@ export default {
       this.canEdit = true;
       this.dialogVisible = true;
       const key = Object.keys(row);
-      console.log(row);
       key.forEach((key) => {
-        this.form[key] = row[key];
-        if (key === "image") {
-          this.fileList = [{ name: row.name, url: row[key] }];
+        if (row[key]) {
+          if (key.includes("image")) {
+            this.fileList.push({ url: row[key], name: row.name, id: key });
+          }
+          if (key !== "createTime") {
+            this.form[key] = row[key];
+          }
         }
       });
+      console.log(this.form, this.fileList);
     },
 
     // 分页
@@ -526,18 +531,13 @@ export default {
             }
             console.log(this.form, this.fileList);
             const formData = new FormData();
-            const { file } = this.form;
-            const { name, image } = this.form;
-            formData.append("type", this.form.type);
-            formData.append("name", this.form.name);
-            formData.append("city", this.form.city);
-            formData.append("file", file);
-            formData.append("level", this.form.level);
-            formData.append("remark", this.form.remark);
-            formData.append("parentName", this.form.parentName);
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             if (this.canEdit) {
-              formData.append("image", image);
-              formData.append("id", this.form.id);
               await postDictEdit(formData); this.$message.success(`编辑成功`);
             } else {
               await postDictAdd(formData); this.$message.success(`新增成功`);

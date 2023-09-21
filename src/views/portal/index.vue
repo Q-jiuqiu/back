@@ -209,7 +209,7 @@ export default {
       searchName: "",
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 20,
       mainClass: [],
       smallClass: [],
       searchCityData: [],

@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-09-14 09:39:00
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 14:42:43
+ * @LastEditTime: 2023-09-21 19:21:36
 -->
 <!--
  * @Author: quling
@@ -708,7 +708,7 @@ export default {
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const formData = new FormData();
             for (const key in this.form) {
-              if (Object.prototype.hasOwnProperty.call(this.form, key)) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
                 formData.append(key, this.form[key]);
               }
             }

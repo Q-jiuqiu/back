@@ -223,9 +223,11 @@ export default {
       this.isEdit = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        this.form[key] = row[key];
-        if (key === "pictrue") {
-          this.fileList = [{ name: row.name, url: row[key] }];
+        if (row[key]) {
+          this.form[key] = row[key];
+          if (key === "pictrue") {
+            this.fileList = [{ name: row.name, url: row[key] }];
+          }
         }
       });
     },

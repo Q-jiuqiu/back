@@ -473,7 +473,7 @@ export default {
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const formData = new FormData();
             for (const key in this.form) {
-              if (Object.prototype.hasOwnProperty.call(this.form, key)) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
                 formData.append(key, this.form[key]);
               }
             }

@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 17:30:23
+ * @LastEditTime: 2023-09-21 19:26:23
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -62,6 +62,7 @@
       </el-table-column>
     </el-table>
     <el-dialog
+      v-loading="recommendedDataListLoading"
       width="30%"
       title="推荐"
       :visible.sync="dataFormIs"
@@ -197,11 +198,13 @@ export default {
       const key = Object.keys(row);
       console.log(row);
       key.forEach((key) => {
-        if (key === "image" && row[key]) {
-          this.fileList = [{ name: row.name, url: row[key] }];
-        }
-        if (key !== "createTime" && row[key]) {
-          this.form[key] = row[key];
+        if (row[key]) {
+          if (key === "image") {
+            this.fileList = [{ name: row.name, url: row[key] }];
+          }
+          if (key !== "createTime") {
+            this.form[key] = row[key];
+          }
         }
       });
     },
@@ -271,6 +274,7 @@ export default {
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
+            this.recommendedDataListLoading = true;
             this.fileList.forEach((item) => {
               if (item.raw) {
                 this.form[`file`] = item.raw;
@@ -278,7 +282,7 @@ export default {
             });
             const formData = new FormData();
             for (const key in this.form) {
-              if (Object.prototype.hasOwnProperty.call(this.form, key)) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
                 formData.append(key, this.form[key]);
               }
             }
@@ -296,6 +300,7 @@ export default {
             }
           } finally {
             this.dataFormIs = false;
+            this.recommendedDataListLoading = false;
             this.getRecommendedList();
           }
         } else {
