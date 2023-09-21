@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 19:41:34
+ * @LastEditTime: 2023-09-21 21:44:08
 -->
 <template>
   <div class="portal-container">
@@ -63,6 +63,13 @@
         height="calc(100% - 3rem )"
         @row-click="handleRowClick"
       >
+        <el-table-column
+          label="序号"
+          type="index"
+          header-align="center"
+          align="center"
+          width="50"
+        />
         <el-table-column
           prop="city"
           label="城市"

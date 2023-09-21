@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 18:57:57
+ * @LastEditTime: 2023-09-21 22:22:51
 -->
 <template>
   <div class="portal-container">
@@ -39,6 +39,13 @@
         border
         height="calc(100% - 3rem )"
       >
+        <el-table-column
+          label="序号"
+          type="index"
+          header-align="center"
+          align="center"
+          width="50"
+        />
         <el-table-column
           prop="parentName"
           label="一级类"

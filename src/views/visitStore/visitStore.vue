@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 18:00:04
+ * @LastEditTime: 2023-09-21 21:27:52
 -->
 <template>
   <div class="portal-container">
@@ -26,6 +26,13 @@
         border
         height="calc(100% - 3rem )"
       >
+        <el-table-column
+          label="序号"
+          type="index"
+          header-align="center"
+          align="center"
+          width="50"
+        />
         <el-table-column
           prop="entName"
           label="名称"
@@ -218,6 +225,7 @@ export default {
      * @return {*}
      */
     handleVisitStoreEdit(row) {
+      this.fileList = [];
       this.dialogTitle = "编辑探店信息数据字典";
       this.dialogVisible = true;
       this.isEdit = true;
