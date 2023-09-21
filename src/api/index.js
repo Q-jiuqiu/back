@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 18:22:10
+ * @LastEditTime: 2023-09-20 17:31:19
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -90,7 +90,7 @@ export function deleteEscapePit(id) {
 // 获取数据字典数据列表
 export function getDictFind(page, params) {
   return request({
-    url: `/dbs/pro/rest/dbs/find/levelDist/one/${page.pageIndex}/${page.pageSize}`,
+    url: `/dbs/pro/rest/dbs/find/dict/one/${page.pageIndex}/${page.pageSize}`,
     method: "get",
     params
   });

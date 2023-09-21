@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-19 21:12:19
+ * @LastEditTime: 2023-09-20 18:40:59
 -->
 <template>
   <div class="portal-container">
@@ -336,7 +336,7 @@ export default {
             type: "美食",
             parentName: this.searchData === "所有" ? "" : this.searchData,
             level: 3,
-            city: "北京市"// this.searchCityData[ this.searchCityData.length - 1]
+            city: this.searchCityData[ this.searchCityData.length - 1]
           }
         );
         this.totalElements = totalElements;
@@ -527,9 +527,11 @@ export default {
             const formData = new FormData();
             let { file } = this.form;
             const { name, image } = this.form;
-            if (Object.prototype.toString.call(file) === "[object String]") {
+            if (Object.prototype.toString.call(file) === "[object Array]") {
               file = new File([Blob], image, `${name}.webp`);
+              console.log(file);
             }
+            console.log(file);
             formData.append("type", this.form.type);
             formData.append("name", this.form.name);
             formData.append("city", this.form.city);
@@ -576,6 +578,15 @@ export default {
         this.form.file = file.raw;
         this.fileList = fileList;
       }
+    },
+    /**
+       * @description: 删除图片
+       * @param {*} file
+       * @param {*} fileList
+       * @return {*}
+       */
+    handleRemove(file, fileList) {
+      this.fileList = fileList;
     },
     /**
      * @description: 图片删除确定

@@ -14,7 +14,9 @@
 .el-upload__input {
   display: none;
 }
-
+.el-dialog__body{
+  padding: 5px 20px 30px;
+}
 
 // to fixed https://github.com/ElemeFE/element/issues/2461
 .el-dialog {

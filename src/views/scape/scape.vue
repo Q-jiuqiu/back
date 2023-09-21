@@ -1,8 +1,14 @@
 <!--
+ * @Author: 何元鹏
+ * @Date: 2023-09-14 09:39:00
+ * @LastEditors: 何元鹏
+ * @LastEditTime: 2023-09-21 14:42:43
+-->
+<!--
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-15 14:48:42
+ * @LastEditTime: 2023-09-19 21:45:08
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -163,89 +169,7 @@
       :visible.sync="faresInner"
       append-to-body
     >
-      <div class="fares">
-        <div v-if="faresIs" class="fares-list">
-          <el-button
-            type="primary"
-            size="medium"
-            @click="handelFaresAddData"
-          > 新增票价</el-button>
-          <el-table
-            ref="Table"
-            v-loading="tableLoading"
-            :data="faresList"
-            border
-            height="20rem"
-          >
-            <el-table-column
-              prop="adult"
-              label="人群类型"
-              width="120"
-              header-align="center"
-              :show-overflow-tooltip="true"
-              align="center"
-            />
-            <el-table-column
-              prop="elder"
-              label="具体条件"
-              header-align="center"
-              :show-overflow-tooltip="true"
-              align="center"
-            /> <el-table-column
-              prop="child"
-              label="票价"
-              width="100"
-              header-align="center"
-              :show-overflow-tooltip="true"
-              align="center"
-            />
-            <el-table-column
-              label="操作"
-              width="180"
-              header-align="center"
-              align="center"
-            >
-              <template slot-scope="scope">
-                <el-button
-                  type="text"
-                  size="small"
-                  @click.stop="handleFaresPreview(scope.row)"
-                >新增</el-button>
-                <el-button
-                  type="text"
-                  size="small"
-                  @click.stop="handleFaresEdit(scope.row)"
-                >编辑</el-button>
-                <el-button
-                  type="text"
-                  size="small"
-                  class="warn-btn"
-                  @click.stop="handleFaresDel(scope.row)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-        <div v-else class="fares-form">
-          <el-form ref="faresForm" :model="faresForm" label-width="80px">
-            <el-form-item label="人群类型:">
-              <el-input v-model="faresForm.adult" />
-            </el-form-item>
-            <el-form-item label="具体条件:">
-              <el-input v-model="faresForm.elder" />
-            </el-form-item>
-            <el-form-item label="票价:">
-              <el-input v-model="faresForm.child" />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" :loading="addFaresBtnLoading" @click="handelSubmitFaresForm('faresForm')">提交</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-      </div>
+      <Fares :fares-id="faresId" />
     </el-dialog>
     <!-- 新增景区 -->
     <el-dialog
@@ -441,7 +365,7 @@
               accept=".jpg,.png,.webp"
               multiple
               :limit="2"
-              :file-list="imageBase64"
+              :file-list="fileList"
               list-type="picture"
               :auto-upload="false"
               :on-change="handleFileChange"
@@ -454,7 +378,7 @@
                 slot="tip"
                 class="el-upload__tip"
               >
-                只能上传jpg/png文件，且不超过2M</div>
+                只能上传jpg/png/webp文件，且不超过2M</div>
             </el-upload>
 
           </el-form-item>
@@ -506,11 +430,12 @@
 </template>
 
 <script>
-import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage, getFaresFindExp, postDbsFaresAdd, deleteFares } from "@/api";
+import { getList, addShop, delShop, editShop, getDictFind, getCityFindPage } from "@/api";
 import Recommend from "@/views/portal/recommend.vue";
+import Fares from "@/views/scape/fares.vue";
 export default {
   name: "Portal",
-  components: { Recommend },
+  components: { Recommend, Fares },
   data() {
     const validateLatitude = (rule, value, callback) => {
       const log = Number(value);
@@ -558,7 +483,7 @@ export default {
         capitaConsumption: "",
         region: ""
       },
-      imageBase64: [], // 图片Base64编码
+      fileList: [], // 图片Base64编码
       rules: {
         name: [
           { required: true, message: "请输入景区名称", trigger: "blur" }
@@ -583,7 +508,7 @@ export default {
       city: "",
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 20,
       secondClass: [],
       filterCityList: [],
       searchCityData: [],
@@ -606,37 +531,14 @@ export default {
           resolve(outputData);
         } },
       classification: "",
-      faresInner: false,
-      faresList: [],
-      faresForm: {
-        id: "",
-        adult: "",
-        elder: "",
-        child: "",
-        productId: ""
-      },
-      faresIs: true,
-      faresAddIs: false,
-      faresInfo: {},
-      faresFindExpId: "",
       exploreId: "",
-      exploreShopInner: false
-
+      exploreShopInner: false,
+      faresId: "",
+      faresInner: false
     };
   },
-  // 侦听器
-  watch: {
-    faresFindExpId: {
-      deep: true,
-      handler(newVal, oldVal) {
-        if (newVal !== oldVal) {
-          this.handleFaresCondition({ id: newVal });
-        }
-      }
-    }
-  },
   mounted() {
-    this.initTableData({
+    this.getLandscapeData({
       type: this.form.type
     });
     this.handelSecondType();
@@ -644,124 +546,10 @@ export default {
   },
   methods: {
     /**
-     * @description:
-     * @return {*}
-     */
-    handelFaresAddData() {
-      this.faresIs = false;
-    },
-    /**
-     * @description: 探店新增
-     * @return {*}
-     */
-    handelExploreShop(row) {
-      this.exploreId = row.id;
-      this.exploreShopInner = true;
-    },
-    /**
-     * @description: 新增票价
-     * @return {*}
-     */
-    handleFaresPreview(row) {
-      this.faresForm = {
-        id: "",
-        adult: "",
-        elder: "",
-        child: "",
-        productId: row.productId
-      };
-      this.faresIs = false;
-      this.faresAddIs = true;
-    },
-    /**
-     * @description: 编辑票价
-     * @return {*}
-     */
-    handleFaresEdit(row) {
-      this.faresForm = row;
-      this.faresInfo = row;
-      this.faresIs = false;
-      this.faresAddIs = false;
-    },
-    /**
-     * @description: 删除票价
-     * @return {*}
-     */
-    async  handleFaresDel(row) {
-      this.$confirm("此操作将永久删除选中景区, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(async() => {
-          this.tableLoading = true;
-          try {
-            await deleteFares(row.id);
-            this.handleFaresCondition({ id: this.faresFindExpId });
-          } catch (error) {
-            this.$message.warning("删除失败");
-          } finally {
-            this.tableLoading = false;
-          }
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
-    },
-    /**
-     * @description: 票价情况
-     * @param {*} row
-     * @return {*}
-     */
-    async handleFaresCondition(row) {
-      this.faresList = [];
-      this.faresInner = true;
-      this.faresFindExpId = row.id;
-      const { data } = await getFaresFindExp(row.id);
-      if (data.length) {
-        this.faresList = data;
-      } else {
-        this.faresList = [];
-      }
-    },
-    /**
-      * @description: 提交票价
-      * @param {*} formName
-      * @return {*}
-      */
-    handelSubmitFaresForm(formName) {
-      this.$refs[formName].validate(async(valid) => {
-        if (valid) {
-          this.addFaresBtnLoading = true;
-          this.faresForm.productId = this.faresFindExpId;
-          if (this.faresAddIs) {
-            this.faresForm.id = "";
-          } else {
-            this.faresForm.id = this.faresInfo.id;
-          }
-          try {
-            const data = await postDbsFaresAdd([this.faresForm]);
-            this.handleFaresCondition({ id: this.faresFindExpId });
-            this.faresIs = true;
-            data && this.$message.success("新建票价成功");
-          } catch (error) {
-            this.$message.error("新建票价失败");
-          } finally {
-            this.addFaresBtnLoading = false;
-          }
-        } else {
-          return false;
-        }
-      });
-    },
-    /**
      * @description: 初始化数据
      * @return {*} 风景列表请求参数
      */
-    async initTableData(res) {
+    async getLandscapeData(res) {
       try {
         this.tableLoading = true;
         const { data } = await getList(
@@ -778,6 +566,23 @@ export default {
         this.tableLoading = false;
       }
     },
+    /**
+     * @description: 探店新增
+     * @return {*}
+     */
+    handelExploreShop(row) {
+      this.exploreId = row.id;
+      this.exploreShopInner = true;
+    },
+    /**
+     * @description:新增推荐
+     * @return {*}
+     */
+    handleFaresCondition(row) {
+      this.faresId = row.id;
+      this.faresInner = true;
+    },
+
     /**
      * @description: 城市数据
      * @return {*} -1代表城市的第一级
@@ -815,7 +620,7 @@ export default {
         return nonEmptyProperties;
       }
       const nonEmptyValues = filterNonEmptyValues(res);
-      this.initTableData(nonEmptyValues);
+      this.getLandscapeData(nonEmptyValues);
     },
     /**
      * @description: 获取二级分类
@@ -850,7 +655,7 @@ export default {
         type: "风景",
         secondType: this.classification
       };
-      this.initTableData(res);
+      this.getLandscapeData(res);
     },
     /**
      * @description: 增加景区-打开对话框
@@ -876,7 +681,7 @@ export default {
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
-          this.imageBase64.push({ url: row[key] });
+          this.fileList.push({ url: row[key] });
         } else {
           this.form[key] = row[key];
         }
@@ -896,26 +701,26 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            this.imageBase64.forEach((item, index) => {
-              if (index === 0) {
-                this.form.image = item.url;
-              }
-              if (index === 1) {
-                this.form.image2 = item.url;
-              }
+            this.fileList.forEach((item, index) => {
+              this.form[`file${index + 1}`] = item.raw;
             });
+            console.log(this.form);
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
-            const params = {
-              ...this.form
-            };
+            const formData = new FormData();
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key)) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             if (!this.canEdit && !this.isEdit) {
-              await addShop(params);
+              await addShop(formData);
             } else if (!this.canEdit && this.isEdit) {
-              await editShop(params);
+              await editShop(formData);
             }
             this.resetForm();
             this.dialogVisible = false;
-            await this.initTableData({
+            await this.getLandscapeData({
               type: "风景"
             });
           } catch (error) {
@@ -968,7 +773,7 @@ export default {
               type: "风景",
               secondType: this.classification
             };
-            this.initTableData(res);
+            this.getLandscapeData(res);
           } catch (error) {
             this.$message.warning("删除失败");
           } finally {
@@ -991,7 +796,7 @@ export default {
       const key = Object.keys(row);
       key.forEach((key) => {
         if (key === "image") {
-          this.imageBase64.push({ url: row[key] });
+          this.fileList.push({ url: row[key] });
         } else {
           this.form[key] = row[key];
         }
@@ -1005,32 +810,24 @@ export default {
           this.form[key] = "";
         }
       }
-      this.imageBase64 = [];
+      this.fileList = [];
     },
 
     // 文件选中
-    handleFileChange(file) {
+    handleFileChange(file, fileList) {
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
+      const imageList = ["png", "jpg", "jpeg", "webp"];
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
+      } else {
+        this.fileList = fileList;
       }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e, index) => {
-        this.imageBase64.push({
-          name: `image${index}`,
-          url: e.target.result
-        });
-        this.$refs.form.validate();
-      };
     },
 
     handleRemove(file, fileList) {
-      this.imageBase64 = fileList;
+      this.fileList = fileList;
     },
     handleExceed() {
       this.$message.warning(`当前限制选择 1 个文件`);
@@ -1040,10 +837,6 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = [];
     }
   }
 };
