@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 19:18:24
+ * @LastEditTime: 2023-09-21 19:41:34
 -->
 <template>
   <div class="portal-container">
@@ -421,7 +421,7 @@ export default {
 
     // 编辑
     handleEdit(row) {
-      this.dialogTitle = "编辑门店信息数据字典";
+      this.dialogTitle = "编辑数据字典";
       this.canEdit = true;
       this.dialogVisible = true;
       const key = Object.keys(row);

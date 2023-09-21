@@ -2,15 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-09-14 09:39:00
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 19:21:36
--->
-<!--
- * @Author: quling
- * @Date: 2023-04-27 22:44:28
- * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-19 21:45:08
- * @Description: 首页
- * @FilePath: \vue-admin-template\src\views\portal\index.vue
+ * @LastEditTime: 2023-09-21 19:52:30
 -->
 <template>
   <div class="portal-container">
@@ -70,37 +62,32 @@
         height="calc(100% - 3rem )"
       >
         <el-table-column
-          prop="secondType"
-          label="分类"
-          width="100"
-          header-align="center"
-          :show-overflow-tooltip="true"
-          align="center"
-        />
-        <el-table-column
           prop="name"
           label="名称"
           header-align="center"
+          width="300"
           :show-overflow-tooltip="true"
           align="center"
         />
         <el-table-column
-          prop="capitaConsumption"
-          width="100"
-          label="门票"
+          prop="secondType"
+          label="分类"
+          width="200"
           header-align="center"
+          :show-overflow-tooltip="true"
+          align="center"
+        />
+        <el-table-column
+          prop="city"
+          label="城市"
+          width="200"
+          header-align="center"
+          :show-overflow-tooltip="true"
           align="center"
         />
         <el-table-column
           prop="addr"
           label="地址"
-          :show-overflow-tooltip="true"
-          header-align="center"
-          align="left"
-        />
-        <el-table-column
-          prop="remark"
-          label="描述"
           :show-overflow-tooltip="true"
           header-align="center"
           align="left"

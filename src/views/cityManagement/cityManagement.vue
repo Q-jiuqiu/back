@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-06 22:26:44
+ * @LastEditTime: 2023-09-21 20:20:25
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -145,18 +145,18 @@
             label="图片"
           >
             <el-upload
-              v-if="!imageBase64"
+              ref="uploadFile"
               class="upload-demo"
               action=""
+              :on-change="handleFileChange"
+              :file-list="fileList"
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png,.webp"
               multiple
               :limit="5"
-              :file-list="form.images"
               list-type="picture"
               :auto-upload="false"
-              :on-change="handleFileChange"
             >
               <el-button
                 size="small"
@@ -168,22 +168,6 @@
               >
                 只能上传jpg/png文件，且不超过2M</div>
             </el-upload>
-            <div v-else>
-              <div v-for="(item,index) in form.images" :key="index">
-                <img
-                  class="image"
-                  :src="item.url"
-                  alt="城市照片"
-                >
-                <i
-                  v-if="isEdit"
-                  class="el-icon-refresh"
-                  title="修改图片"
-                  @click="handleChangeImage"
-                />
-              </div>
-
-            </div>
           </el-form-item>
           <el-form-item
             label="简介"
@@ -243,11 +227,8 @@ export default {
         remark: "",
         city: ""
       },
-      imageBase64: "", // 图片Base64编码
+      fileList: [], // 图片Base64编码
       rules: {
-        remark: [
-          { required: true, message: "请输入描述", trigger: "blur" }
-        ],
         city: [
           { required: true, message: "请输入城市", trigger: "blur" }
         ]
@@ -281,7 +262,7 @@ export default {
             }));
           }
           const outputData = convertData(data);
-          console.log(outputData);
+
           resolve(outputData);
         } }
     };
@@ -330,12 +311,10 @@ export default {
           return { ...item };
         }
       });
-      console.log(data, newData);
       resolve(newData);
     },
     // 新增城市下级
     async handleNewAddCity(row) {
-      console.log(row);
       this.dialogVisible = true;
       this.parentCity = row.id;
     },
@@ -348,7 +327,6 @@ export default {
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -402,26 +380,30 @@ export default {
         });
     },
     // 查看
-    handlePreview(row) {
+    async handlePreview(row) {
       this.dialogTitle = "查看城市信息";
       this.canEdit = true;
       this.isEdit = false;
       this.dialogVisible = true;
-      const key = Object.keys(row);
+      const { data } = await getCityFind(row.city);
+      const key = Object.keys(data);
       key.forEach((key) => {
-        if (key.includes("image")) {
-          if (row[key]) {
-            this.imageBase64 = row[key];
-            this.form.images.push({ url: row[key] });
+        if (data[key]) {
+          if (key.includes("image")) {
+            console.log(data[key]);
+            this.fileList.push({ url: data[key], name: data.city, id: key });
+          }
+          if (key !== "createTime") {
+            this.form[key] = data[key];
           }
         }
       });
-      this.form.city = row.city;
-      this.form.id = row.id;
-      this.form.remark = row.remark;
+      this.form.remark = data.remark;
+      console.log(this.fileList);
     },
     // 编辑
     async  handleEdit(row) {
+      this.fileList = [];
       this.dialogTitle = "编辑城市信息";
       this.isEdit = true;
       this.canEdit = true;
@@ -429,17 +411,18 @@ export default {
       const { data } = await getCityFind(row.city);
       const key = Object.keys(data);
       key.forEach((key) => {
-        if (key.includes("image")) {
-          if (data[key]) {
-            this.imageBase64 = row[key];
-            this.form.images.push({ url: data[key] });
+        if (data[key]) {
+          if (key.includes("image")) {
+            console.log(data[key]);
+            this.fileList.push({ url: data[key], name: data.city, id: key });
+          }
+          if (key !== "createTime") {
+            this.form[key] = data[key];
           }
         }
       });
-      this.form.city = row.city;
-      this.form.id = row.id;
       this.form.remark = data.remark;
-      this.form.parentCity = row.parentCity;
+      console.log(this.fileList);
     },
     // 编辑
     handleFormEdit() {
@@ -453,6 +436,7 @@ export default {
         remark: "",
         city: ""
       };
+      this.fileList = [];
     },
     // 提交表单
     handleFormConfirm() {
@@ -461,27 +445,33 @@ export default {
         this.dialogVisible = false;
         return;
       }
-      this.form.images.forEach((item, index) => {
-        this.form[`image${index + 1}`] = item.url;
-      });
+
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
             this.addBtnLoading = true;
-
+            this.fileList.forEach((item, index) => {
+              if (item.raw) {
+                this.form[`file${index + 1}`] = item.raw;
+              } else {
+                this.form[`image${index + 1}`] = item.url;
+              }
+            });
+            console.log(this.form);
+            const formData = new FormData();
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             // 新增城市
             if (!this.canEdit) {
-              const params = {
-                ...this.form,
-                parentCity: this.parentCity
-              };
-              await postCityDict(params);
+              formData.append("parentCity", this.parentCity);
+              await postCityDict(formData);
               this.resetForm();
             } else if (this.canEdit && this.isEdit) {
-              const params = {
-                ...this.form
-              };
-              await postCityEdit(params);
+              await postCityEdit(formData);
             }
             this.dialogVisible = false;
             await this.initTableData();
@@ -500,39 +490,29 @@ export default {
       });
     },
     // 文件选中
-    handleFileChange(file) {
+    handleFileChange(file, fileList) {
+      if (this.$refs.uploadFile.uploadFiles.length > 1) {
+        this.$refs.uploadFile.uploadFiles.shift();
+      }
       // 检验选择文件格式
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg","webp"];// 图片文件格式列表
+      const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
+      } else {
+        this.fileList = fileList;
       }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e, index) => {
-        this.$refs.form.validate();
-        this.form.images.push({
-          name: `image${index}`,
-          url: e.target.result
-        });
-      };
     },
 
     handleRemove(file, fileList) {
-      this.form.images = fileList;
+      this.fileList = fileList;
     },
     beforeRemove() {
       return this.$confirm(`确定移除？`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.images = [];
     }
   }
 };
