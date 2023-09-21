@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-20 19:01:36
+ * @LastEditTime: 2023-09-21 18:00:04
 -->
 <template>
   <div class="portal-container">
@@ -308,7 +308,7 @@ export default {
             this.addBtnLoading = true;
 
             const formData = new FormData();
-            formData.append("entName", entName); 
+            formData.append("entName", entName);
             if (Object.prototype.toString.call(file) === "[object Array]") {
               file = new File([], "");
             }

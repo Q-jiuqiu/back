@@ -524,14 +524,10 @@ export default {
             if (Object.prototype.toString.call(this.form.city) === "[object Array]") {
               this.form.city = this.form.city.join("/");
             }
+            console.log(this.form, this.fileList);
             const formData = new FormData();
-            let { file } = this.form;
+            const { file } = this.form;
             const { name, image } = this.form;
-            if (Object.prototype.toString.call(file) === "[object Array]") {
-              file = new File([Blob], image, `${name}.webp`);
-              console.log(file);
-            }
-            console.log(file);
             formData.append("type", this.form.type);
             formData.append("name", this.form.name);
             formData.append("city", this.form.city);

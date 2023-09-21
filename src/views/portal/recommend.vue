@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-20 20:53:33
+ * @LastEditTime: 2023-09-21 17:30:23
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
@@ -155,17 +155,11 @@ export default {
       fileList: [],
       form: {
         foodName: "",
-        image: [],
-        file: [],
-        describe: "1",
         foodId: this.foodId
       },
       rules: {
         foodName: [
           { required: true, message: "请输入推荐名称", trigger: "blur" }
-        ],
-        file: [
-          { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
       dataFormIs: false,
@@ -201,10 +195,12 @@ export default {
       this.dataFormIs = true;
       this.addIsEditor = false;
       const key = Object.keys(row);
+      console.log(row);
       key.forEach((key) => {
-        if (key === "image") {
+        if (key === "image" && row[key]) {
           this.fileList = [{ name: row.name, url: row[key] }];
-        } else {
+        }
+        if (key !== "createTime" && row[key]) {
           this.form[key] = row[key];
         }
       });
@@ -245,9 +241,6 @@ export default {
       this.addIsEditor = true;
       this.form = {
         foodName: "",
-        image: [],
-        file: [],
-        describe: "1",
         foodId: this.foodId
       };
       this.fileList = [];
@@ -278,12 +271,18 @@ export default {
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
+            this.fileList.forEach((item) => {
+              if (item.raw) {
+                this.form[`file`] = item.raw;
+              }
+            });
             const formData = new FormData();
-            const { foodName, describe, file, foodId } = this.form;
-            formData.append("foodName", foodName);
-            formData.append("file", file);
-            formData.append("describe", describe);
-            formData.append("foodId", foodId);
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key)) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             if (this.addIsEditor) {
               await postRecommendAdd(formData);
             } else {

@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 19:29:14
+ * @LastEditTime: 2023-09-21 18:52:12
 -->
 <template>
   <div class="portal-container">
@@ -12,7 +12,7 @@
 
         <div class="search-item">
           <div class="label">分类:</div>
-          <el-select v-model="searchCityData" clearable placeholder="请选择" @change="handelClassify">
+          <el-select v-model="searchCityData" clearable placeholder="请选择" @change="initTableData">
             <el-option
               v-for="item in filterClassList"
               :key="item.value"
@@ -27,7 +27,7 @@
         size="medium"
         @click="handleShopAdd"
       >
-        新增字典
+        新增
       </el-button>
     </div>
     <!-- 表格 -->
@@ -35,23 +35,39 @@
       <el-table
         ref="Table"
         v-loading="tableLoading"
-        :data="tableData"
+        :data="dictionaryTableData"
         border
         height="calc(100% - 3rem )"
-        @row-click="handleRowClick"
       >
         <el-table-column
           prop="parentName"
           label="一级类"
           header-align="center"
           align="center"
-        />
+        >
+          <template slot-scope="scope">
+            <el-select v-if="dictionaryEdit && dictionaryIndex === scope.$index" v-model=" scope.row.parentName " clearable placeholder="请选择">
+              <el-option
+                v-for="(item,index) in filterClassList"
+                :key="index"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <span v-else>{{ scope.row.parentName }}</span>
+          </template>
+        </el-table-column>
         <el-table-column
           prop="name"
           label="二级类"
           header-align="center"
           align="center"
-        />
+        >
+          <template slot-scope="scope">
+            <el-input v-if="dictionaryEdit && dictionaryIndex === scope.$index" v-model=" scope.row.name " />
+            <span v-else>{{ scope.row.name }}</span>
+          </template>
+        </el-table-column>
         <el-table-column
           label="操作"
           header-align="center"
@@ -59,15 +75,20 @@
         >
           <template slot-scope="scope">
             <el-button
+              v-if="dictionaryEdit && dictionaryIndex === scope.$index"
+              size="mini"
+              @click="handleFormConfirm(scope.$index,scope.row)"
+            >保存</el-button>
+            <el-button
               type="text"
               size="small"
-              @click.stop="handleEdit(scope.row)"
+              @click.stop="handleEdit(scope.$index,scope.row)"
             >编辑</el-button>
             <el-button
               type="text"
               size="small"
               class="warn-btn"
-              @click.stop="handleShopDel(scope.row)"
+              @click.stop="handleShopDel(scope.$index,scope.row)"
             >
               删除
             </el-button>
@@ -86,77 +107,6 @@
         @current-change="handelCurrentPage"
       />
     </div>
-    <!-- 新增避坑 -->
-    <el-dialog
-      :visible.sync="dialogVisible"
-      :before-close="handleDialogClose"
-    >
-      <span
-        slot="title"
-        class="dialog-title"
-      >
-        {{ dialogTitle }}
-
-      </span>
-      <div class="dialog-container">
-        <el-form
-          ref="form"
-          :rules="rules"
-          :model="form"
-          label-width="80px"
-        >
-
-          <el-row>
-            <el-form-item
-              label="大类"
-              prop="parentName"
-            >
-              <el-select v-model="form.parentName" clearable placeholder="请选择">
-                <el-option
-                  v-for="item in filterClassList"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-row>
-          <el-row>
-            <el-form-item
-              label="小类"
-              prop="name"
-            >
-              <el-input
-                v-model="form.name"
-                placeholder="请输入类型"
-                style="width: 100%;"
-              />
-            </el-form-item>
-          </el-row>
-
-        </el-form>
-      </div>
-      <span
-        slot="footer"
-        class="dialog-footer"
-      >
-        <el-button
-          size="medium"
-          @click="dialogVisible = false"
-        >
-          取消
-        </el-button>
-        <el-button
-          type="primary"
-          size="medium"
-          :loading="addBtnLoading"
-          @click="handleFormConfirm"
-        >
-          确定
-        </el-button>
-      </span>
-    </el-dialog>
-
   </div>
 </template>
 
@@ -167,31 +117,8 @@ export default {
   name: "Portal",
   data() {
     return {
-      tableData: [],
-      delLoading: false,
-      dialogVisible: false, // 对话框显隐
-      dialogTitle: "新增数据字典",
-      canEdit: false, // 能否编辑 是否显示编辑图标
-      isEdit: true, // 是否编辑
-      imageBase64: "", // 图片Base64编码
-      form: {
-        city: "成都市",
-        name: "",
-        parentName: "美食",
-        type: "美食",
-        level: 2,
-        remark: ""
-      },
-      rules: {
-        name: [
-          { required: true, message: "请输入名称", trigger: "blur" }
-        ],
-        parentName: [
-          { required: true, message: "请选择类型", trigger: "change" }
-        ]
-      },
-      addBtnLoading: false, // 添加门店loading
-      tableLoading: false, // 表格loading
+      dictionaryTableData: [],
+      tableLoading: false,
       searchCityData: "美食",
       totalElements: 0,
       pageIndex: 1,
@@ -203,7 +130,9 @@ export default {
       {
         value: "风景",
         label: "风景"
-      }]
+      }],
+      dictionaryEdit: false,
+      dictionaryIndex: 0
     };
   },
   mounted() {
@@ -228,30 +157,18 @@ export default {
           }
         );
         this.totalElements = totalElements;
-        this.tableData = content;
+        this.dictionaryTableData = content;
       } catch (error) {
         this.$message.warning("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
-    /**
-     * @description: 筛选
-     * @return {*}
-     */
-    handelClassify(option) {
-      this.initTableData();
-    },
     // 编辑
-    handleEdit(row) {
-      this.dialogTitle = "编辑门店信息数据字典";
-      this.isEdit = true;
-      this.canEdit = true;
-      this.dialogVisible = true;
-      const key = Object.keys(row);
-      key.forEach((key) => {
-        this.form[key] = row[key];
-      });
+    handleEdit(index, row) {
+      console.log(index, row);
+      this.dictionaryEdit = true;
+      this.dictionaryIndex = index;
     },
 
     // 分页
@@ -260,101 +177,73 @@ export default {
       this.initTableData();
     },
 
-    // 重置搜索条件
-    handleFilterReset() {
-      this.name = "";
-      this.searchCityData = "";
-      this.region = "";
-      this.initTableData();
+    // 新增
+    handleShopAdd() {
+      const faresData = {
+        city: "成都市",
+        name: "",
+        parentName: this.searchCityData,
+        type: this.searchCityData,
+        level: 2
+      };
+      this.dictionaryEdit = true;
+      this.dictionaryIndex = 0;
+      this.dictionaryTableData.unshift(faresData);
     },
-    // 点击表格行
-    handleRowClick(row) {
-      this.$refs.Table.toggleRowSelection(row);
-    },
-    // 按钮失焦
-    dissolveFocus(event) {
-      let target = event.target;
-      if (target.nodeName === "SPAN") {
-        target = event.target.parentNode;
-      }
-      target.blur();
-    },
-    // 增加门店-打开对话框
-    handleShopAdd(event) {
-      this.dialogTitle = "新增数据字典";
-      this.isEdit = true;
-      this.dissolveFocus(event);
-      this.dialogVisible = true;
-    },
-    // 关闭对话
-    handleDialogClose(done) {
-      if (this.addBtnLoading) {
-        this.$message.info("正在增加数据……");
-        return;
-      }
-      this.resetForm();
-      this.canEdit = false;
-      done();
-    },
-    // 删除门店
-    handleShopDel(item) {
-      this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(async() => {
-          console.log(item);
-          try {
-            await deleteDictPit(item.id);
-            this.$message.success("删除成功!");
-            this.initTableData();
-          } catch (error) {
-            this.$message.warning("删除失败");
-          }
+    // 删除
+    handleShopDel(index, row) {
+      console.log(index, row);
+      if (row.id) {
+        this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
         })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
-    },
-    // 重置表单
-    resetForm() {
-      for (const key in this.form) {
-        if (Object.hasOwnProperty.call(this.form, key)) {
-          this.form[key] = "";
-        }
-      }
-      this.imageBase64 = "";
-    },
-    // 提交表单
-    handleFormConfirm() {
-      console.log(this.form);
-      this.$refs.form.validate(async(valid) => {
-        if (valid) {
-          try {
-            this.addBtnLoading = true;
-            this.form.type = this.form.parentName;
-            if (this.canEdit) {
-              await postDictEdit(this.form);
-            } else {
-              await postDictAdd(this.form);
+          .then(async() => {
+            try {
+              await deleteDictPit(row.id);
+              this.$message.success("删除成功!");
+              this.initTableData();
+            } catch (error) {
+              this.$message.warning("删除失败");
             }
-            this.resetForm();
-            this.dialogVisible = false;
-            await this.initTableData();
-            this.$message.success(`新增成功`);
-          } catch (error) {
-            this.$message.error(`新增失败`);
-          } finally {
-            this.addBtnLoading = false;
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除"
+            });
+          });
+      } else {
+        this.dictionaryTableData.splice(index, 1);
+        this.dictionaryEdit = false;
+      }
+    },
+    // 保存
+    async handleFormConfirm(index, row) {
+      console.log(index, row);
+      try {
+        this.tableLoading = true;
+        const formData = new FormData();
+        for (const key in row) {
+          if (Object.prototype.hasOwnProperty.call(row, key)) {
+            formData.append(key, row[key]);
           }
-        } else {
-          return false;
         }
-      });
+        console.log(formData);
+        if (this.dictionaryEdit) {
+          await postDictEdit(formData);
+        } else {
+          await postDictAdd(formData);
+        }
+        this.initTableData();
+        this.$message.success(`新增成功`);
+      } catch (error) {
+        this.$message.error(`新增失败`);
+      } finally {
+        this.tableLoading = false;
+        this.dictionaryEdit = false;
+      }
     }
   }
 };

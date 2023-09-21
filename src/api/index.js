@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-20 17:31:19
+ * @LastEditTime: 2023-09-21 18:07:27
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -16,7 +16,12 @@ export function getList(params, page) {
     params
   });
 }
-
+export function getFindId(id) {
+  return request({
+    url: `/dbs/pro/rest/dbs/find/${id}`,
+    method: "get"
+  });
+}
 // 新增门店信息
 export function addShop(params) {
   return request({

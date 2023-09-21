@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-09-20 22:17:48
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 16:58:48
+ * @LastEditTime: 2023-09-21 18:16:24
 -->
 <template>
   <div class="addStore">
@@ -164,8 +164,8 @@
                 :loading="loadingSmallClass"
               >
                 <el-option
-                  v-for="item in smallClass"
-                  :key="item.value"
+                  v-for="(item,index) in smallClass"
+                  :key="index"
                   :label="item.label"
                   :value="item.value"
                 />
@@ -177,19 +177,20 @@
               label="探店主播"
             >
               <el-select
-                v-model="form.threeType"
+                v-model="form.exps"
+                multiple
                 style="width: 100%;"
                 clearable
                 placeholder="请选择"
-                loading-text="小类加载中..."
+                loading-text="加载中..."
                 no-data-text="暂无数据"
                 :loading="loadingSmallClass"
               >
                 <el-option
-                  v-for="item in smallClass"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+                  v-for="(item,index) in tableVisitStoreData"
+                  :key="index"
+                  :label="item.entName"
+                  :value="item.id"
                 />
               </el-select>
             </el-form-item>
@@ -265,7 +266,7 @@
 </template>
 
 <script>
-import { addShop, editShop, getDictFind, getCityFindPage } from "@/api";
+import { addShop, editShop, getDictFind, getCityFindPage, getExpUserFind, getFindId } from "@/api";
 export default {
   name: "AddStore",
   components: { },
@@ -361,22 +362,27 @@ export default {
           const outputData = convertData(data);
           resolve(outputData);
         }
-      }
+      },
+      tableVisitStoreData: []
     };
   },
   computed: {},
   watch: {},
-  mounted() {
+  async mounted() {
     if (this.operationType === "edit") {
-      const row = this.shopData;
+      const { data } = await getFindId(this.shopData.id);
+      const row = data;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key.includes("image") && row[key]) {
-          this.fileList.push({ url: row[key], name: row.name + key, id: key });
+        if (row[key]) {
+          this.form[key] = row[key];
+          if (key.includes("image")) {
+            this.fileList.push({ url: row[key], name: row.name + key, id: key });
+          }
         }
-        this.form[key] = row[key];
       });
     }
+    this.getVisitStoreDataList();
   },
   methods: {
     /**
@@ -385,6 +391,25 @@ export default {
      */
     handleBackToList() {
       this.$emit("onBackToList", true, false);
+    },
+    /**
+     * @description: 获取主播列表
+     * @return {*}
+     */
+    async getVisitStoreDataList() {
+      try {
+        this.loadingSmallClass = true;
+        const { data: { content }} = await getExpUserFind(
+          { pageIndex: 1,
+            pageSize: 1000
+          }
+        );
+        this.tableVisitStoreData = content;
+      } catch (error) {
+        this.$message.error("获取数据失败");
+      } finally {
+        this.loadingSmallClass = false;
+      }
     },
     /**
      * @description: 通过大类查询小类信息列表
@@ -440,6 +465,8 @@ export default {
             this.fileList.forEach((item, index) => {
               if (item.raw) {
                 this.form[`file${index + 1}`] = item.raw;
+              } else {
+                this.form[`image${index + 1}`] = item.url;
               }
             });
             console.log(this.form);
