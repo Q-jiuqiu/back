@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 19:44:30
+ * @LastEditTime: 2023-09-21 21:44:08
 -->
 <template>
   <div class="portal-container">
@@ -64,33 +64,33 @@
         @row-click="handleRowClick"
       >
         <el-table-column
+          label="序号"
+          type="index"
+          header-align="center"
+          align="center"
+          width="50"
+        />
+        <el-table-column
           prop="city"
           label="城市"
-          width="120"
+          width="420"
           header-align="center"
           align="center"
         />
         <el-table-column
           prop="parentName"
-          label="二级类"
-          width="120"
-          header-align="center"
-          align="center"
-        />
-        <el-table-column
-          prop="name"
-          label="三级类"
+          label="一级分类"
           width="200"
           header-align="center"
           align="center"
         />
         <el-table-column
-          prop="remark"
-          label="描述"
+          prop="name"
+          label="二级分类"
           header-align="center"
-          align="left"
-          :show-overflow-tooltip="true"
+          align="center"
         />
+
         <el-table-column
           label="操作"
           width="150"
@@ -192,43 +192,22 @@
             label="图片"
           >
             <el-upload
-              v-if="!imageBase64"
+              ref="uploadFile"
               class="upload-demo"
               action=""
+              :on-change="handleFileChange"
+              :file-list="fileList"
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png,.webp"
               multiple
-              :limit="1"
-              :on-exceed="handleExceed"
-              :file-list="form.image"
+              :limit="2"
+              list-type="picture"
               :auto-upload="false"
-              :on-change="handleFileChange"
             >
-              <el-button
-                size="small"
-                type="primary"
-              >点击上传</el-button>
-              <div
-                slot="tip"
-                class="el-upload__tip"
-              >
-                只能上传jpg/png文件，且不超过2M</div>
+              <el-button slot="trigger" size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">只能上传jpg/png/webp文件，且不超过500kb</div>
             </el-upload>
-            <div v-else>
-
-              <img
-                class="image"
-                :src="imageBase64"
-                alt="门店照片"
-              >
-              <i
-                v-if="isEdit"
-                class="el-icon-refresh"
-                title="修改图片"
-                @click="handleChangeImage"
-              />
-            </div>
           </el-form-item>
           <el-row>
             <el-form-item
@@ -265,14 +244,13 @@
         </el-button>
       </span>
     </el-dialog>
-
   </div>
 </template>
 
 <script>
 import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
 export default {
-  name: "Portal",
+  name: "TwoDictionary",
 
   data() {
     return {
@@ -281,18 +259,17 @@ export default {
       dialogVisible: false, // 对话框显隐
       dialogTitle: "新增数据字典",
       canEdit: false, // 能否编辑 是否显示编辑图标
-      isEdit: true, // 是否编辑
-      imageBase64: "", // 图片Base64编码
       searchData: "",
       searchCityData: "",
+      fileList: [],
       form: {
         name: "",
         type: "美食",
         remark: "",
         parentName: "",
         level: 3,
-        image: [],
-        city: ""
+        city: "",
+        id: ""
       },
       rules: {
         city: [
@@ -310,7 +287,7 @@ export default {
       filterCityList: [],
       totalElements: 0,
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 20,
       tableDataOne: [],
       filterList: [],
       filterLists: [],
@@ -335,12 +312,43 @@ export default {
     };
   },
   mounted() {
-    this.getFilterList();
-    this.initTableData();
     this.getFilterCityListData();
+    this.getFilterList();
+    this.getTwoDictionaryDataList();
   },
   methods: {
-    /* 搜索数据 */
+    /**
+     * @description: 数据初始化
+     * @return {*}
+     */
+
+    async getTwoDictionaryDataList() {
+      try {
+        this.tableLoading = true;
+        const { data: {
+          content, totalElements
+        }} = await getDictFind(
+          { pageIndex: this.pageIndex,
+            pageSize: this.pageSize
+          }, {
+            type: "美食",
+            parentName: this.searchData === "所有" ? "" : this.searchData,
+            level: 3,
+            city: this.searchCityData[ this.searchCityData.length - 1]
+          }
+        );
+        this.totalElements = totalElements;
+        this.tableData = content;
+      } catch (error) {
+        this.$message.warning("获取数据失败");
+      } finally {
+        this.tableLoading = false;
+      }
+    },
+    /**
+     * @description: 搜索数据
+     * @return {*}
+     */
     async  handelSearchTableData() {
       try {
         this.tableLoading = true;
@@ -369,13 +377,17 @@ export default {
         this.totalElements = totalElements;
         this.tableData = content;
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
     },
 
-    /* 城市数据 */
+    /**
+     * @description: 城市数据
+     * @return {*}
+     */
+    /*  */
     async  getFilterCityListData() {
       const { data } = await getCityFindPage(this.parentCity);
       function convertData(data) {
@@ -390,8 +402,11 @@ export default {
       const outputData = convertData(data);
       this.filterCityList = outputData;
     },
-    /* 获取筛选条件 */
-    async  getFilterList() {
+    /**
+     * @description: 获取筛选条件
+     * @return {*}
+     */
+    async getFilterList() {
       const { data: {
         content
       }} = await getDictFind(
@@ -413,48 +428,27 @@ export default {
 
     // 编辑
     handleEdit(row) {
-      this.dialogTitle = "编辑门店信息数据字典";
-      this.isEdit = true;
+      this.dialogTitle = "编辑数据字典";
       this.canEdit = true;
       this.dialogVisible = true;
       const key = Object.keys(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
+        if (row[key]) {
+          if (key.includes("image")) {
+            this.fileList.push({ url: row[key], name: row.name, id: key });
+          }
+          if (key !== "createTime") {
+            this.form[key] = row[key];
+          }
         }
       });
+      console.log(this.form, this.fileList);
     },
-    // 获取列表
-    async initTableData() {
-      try {
-        this.tableLoading = true;
-        const { data: {
-          content, totalElements
-        }} = await getDictFind(
-          { pageIndex: this.pageIndex,
-            pageSize: this.pageSize
-          }, {
-            type: "美食",
-            parentName: this.searchData === "所有" ? "" : this.searchData,
-            level: 3,
-            city: this.searchCityData[ this.searchCityData.length - 1]
-          }
-        );
-        this.totalElements = totalElements;
-        this.tableData = content;
-      } catch (error) {
-        this.$message.warning("获取数据失败");
-      } finally {
-        this.tableLoading = false;
-      }
-    },
+
     // 分页
     handelCurrentPage(index) {
       this.pageIndex = index;
-      this.initTableData();
+      this.getTwoDictionaryDataList();
     },
 
     // 重置搜索条件
@@ -463,11 +457,10 @@ export default {
       this.city = "";
       this.region = "";
       this.searchData = "";
-      this.initTableData();
+      this.getTwoDictionaryDataList();
     },
     // 点击表格行
     handleRowClick(row) {
-      console.log(row);
       this.$refs.Table.toggleRowSelection(row);
     },
     // 按钮失焦
@@ -478,12 +471,13 @@ export default {
       }
       target.blur();
     },
-    // 增加门店-打开对话框
+    // 新增
     handleShopAdd(event) {
       this.dialogTitle = "新增数据字典";
       this.canEdit = false;
       this.dissolveFocus(event);
       this.dialogVisible = true;
+      this.fileList = [];
     },
     // 关闭对话
     handleDialogClose(done) {
@@ -503,11 +497,10 @@ export default {
         type: "warning"
       })
         .then(async() => {
-          console.log(item);
           try {
             await deleteDictPit(item.id);
             this.$message.success("删除成功!");
-            this.initTableData();
+            this.getTwoDictionaryDataList();
           } catch (error) {
             this.$message.warning("删除失败");
           }
@@ -526,9 +519,13 @@ export default {
           this.form[key] = "";
         }
       }
-      this.imageBase64 = "";
+      this.fileList = [];
     },
-    // 提交表单
+
+    /**
+     * @description: 新增或编辑数据并提交数据
+     * @return {*}
+     */
     handleFormConfirm() {
       this.form.type = "美食";
       this.form.level = 3;
@@ -536,26 +533,28 @@ export default {
         if (valid) {
           try {
             this.addBtnLoading = true;
-            console.log(this.form, Object.prototype.toString.call(this.form.city));
             if (Object.prototype.toString.call(this.form.city) === "[object Array]") {
-              console.log(this.form.city);
               this.form.city = this.form.city.join("/");
             }
-            const params = {
-              ...this.form,
-              image: this.imageBase64
-            };
-            console.log(params);
+            console.log(this.form, this.fileList);
+            const formData = new FormData();
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             if (this.canEdit) {
-              await postDictEdit(params); this.$message.success(`编辑成功`);
+              await postDictEdit(formData); this.$message.success(`编辑成功`);
             } else {
-              await postDictAdd(params); this.$message.success(`新增成功`);
+              await postDictAdd(formData); this.$message.success(`新增成功`);
             }
             this.resetForm();
             this.dialogVisible = false;
-            await this.initTableData();
+            this.canEdit = false;
+            await this.getTwoDictionaryDataList();
           } catch (error) {
-            this.$message.error(`新增失败`);
+            this.$message.error(`操作数据失败！${error}`);
           } finally {
             this.addBtnLoading = false;
           }
@@ -564,41 +563,45 @@ export default {
         }
       });
     },
-    // 文件选中
-    handleFileChange(file) {
-      this.form.image = [file];
-      // 检验选择文件格式
+    /**
+     * @description: 文件上传
+     * @param {*} file
+     * @return {*}
+     */
+    handleFileChange(file, fileList) {
+      if (this.$refs.uploadFile.uploadFiles.length > 1) {
+        this.$refs.uploadFile.uploadFiles.shift();
+      }
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
-      const imageList = ["png", "gif", "jpg", "jpeg","webp"];// 图片文件格式列表
+      const imageList = ["png", "jpg", "jpeg", "webp"];
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
+      } else {
+        this.form.file = file.raw;
+        this.fileList = fileList;
       }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
-        this.$refs.form.validate();
-      };
     },
-
+    /**
+       * @description: 删除图片
+       * @param {*} file
+       * @param {*} fileList
+       * @return {*}
+       */
     handleRemove(file, fileList) {
-      this.form.image = [];
+      this.fileList = fileList;
     },
-    handleExceed() {
-      this.$message.warning(`当前限制选择 1 个文件`);
-    },
+    /**
+     * @description: 图片删除确定
+     * @param {*} file
+     * @param {*} fileList
+     * @return {*}
+     */
     beforeRemove(file, fileList) {
-      return this.$confirm(`确定移除 ${file.name}？`, "提示", {
+      return this.$confirm(`确定移除 ${file.name}?`, "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
     }
   }
 };

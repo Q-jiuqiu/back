@@ -2,35 +2,11 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-14 17:11:38
+ * @LastEditTime: 2023-09-21 19:26:23
 -->
 <template>
   <div v-loading="recommendedDataListLoading" class="recommend-list">
-    <el-row v-for="(item,index) in recommendedDataList" :key="index" style="padding: 0.8rem 0.5rem;">
-      <el-col :span="6">
-        <el-image
-          class="recommend-list-image"
-          :src="item.image"
-          fit="fill"
-        />
-      </el-col>
-      <el-col :span="17">
-        <div class="recommend-list-center">
-          <span class="title">{{ item.foodName }}</span>
-          <div class="text">
-            <span class="text-button">
-              <el-button type="text" size="small" class="button" @click="handelRecommendedEditor(item)">编辑</el-button>
-              <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
-            </span>
-          </div>
-        </div>
-      </el-col>
-    </el-row>
-    <span
-      slot="footer"
-      class="dialog-footer"
-    >
-
+    <header class="recommend-list-header">
       <el-button
         type="primary"
         size="medium"
@@ -38,10 +14,57 @@
       >
         新增
       </el-button>
-    </span>
+    </header>
+    <el-table
+      border
+      :data="recommendedDataList"
+      class="recommend-list-table"
+    >
+      <el-table-column
+        label="名称"
+        header-align="center"
+        :show-overflow-tooltip="true"
+        align="center"
+      >
+        <template slot-scope="{ row }">
+          <span>{{ row.foodName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="图片"
+        width="180"
+        header-align="center"
+        :show-overflow-tooltip="true"
+        align="center"
+      >
+        <template slot-scope="{ row }">
+          <img style="width: 50px; height: 50px;" :src="row.image" :alt="row.foodName">
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="操作"
+        width="180"
+        header-align="center"
+        :show-overflow-tooltip="true"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <el-button
+            size="mini"
+            @click="handelRecommendedEditor( scope.row,scope.$index,)"
+          >编辑</el-button>
+          <el-button
+            size="mini"
+            type="danger"
+            @click="handelRecommendedDelete(scope.row,scope.$index, )"
+          >删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
     <el-dialog
+      v-loading="recommendedDataListLoading"
       width="30%"
-      title="门店菜品推荐"
+      title="推荐"
       :visible.sync="dataFormIs"
       append-to-body
     >
@@ -64,30 +87,32 @@
 
           <el-form-item
             label="图片"
-            prop="image"
+            prop="file"
           >
             <el-upload
+              ref="uploadFile"
               class="upload-demo"
               action=""
+              :file-list="fileList"
               :on-remove="handleRemove"
               :before-remove="beforeRemove"
               accept=".jpg,.png,.webp"
               multiple
-              :limit="1"
+              :limit="2"
               :on-exceed="handleExceed"
-              :file-list="form.image"
               :auto-upload="false"
+              list-type="picture"
               :on-change="handleFileChange"
             >
               <el-button
                 size="small"
                 type="primary"
-              >菜品图片</el-button>
+              >上传图片</el-button>
               <div
                 slot="tip"
                 class="el-upload__tip"
               >
-                只能上传jpg/png文件，且不超过2M</div>
+                只能上传jpg/png/webp文件，且不超过2M</div>
             </el-upload>
 
           </el-form-item>
@@ -108,9 +133,7 @@
         </el-button>
       </span>
     </el-dialog>
-
   </div>
-
 </template>
 
 <script>
@@ -130,19 +153,14 @@ export default {
   // 组件状态值
   data() {
     return {
-      imageBase64: "", // 图片Base64编码
+      fileList: [],
       form: {
         foodName: "",
-        image: [],
-        describe: "1",
         foodId: this.foodId
       },
       rules: {
         foodName: [
           { required: true, message: "请输入推荐名称", trigger: "blur" }
-        ],
-        image: [
-          { required: true, message: "请上传图片", trigger: "blur" }
         ]
       },
       dataFormIs: false,
@@ -158,7 +176,6 @@ export default {
     foodId: {
       deep: true,
       handler(newVal, oldVal) {
-        console.log(newVal, oldVal);
         if (newVal !== oldVal) {
           this.getRecommendedList();
         }
@@ -179,12 +196,15 @@ export default {
       this.dataFormIs = true;
       this.addIsEditor = false;
       const key = Object.keys(row);
+      console.log(row);
       key.forEach((key) => {
-        if (key === "image") {
-          this.imageBase64 = row[key];
-          this.form.image = [{ name: "图片" }];
-        } else {
-          this.form[key] = row[key];
+        if (row[key]) {
+          if (key === "image") {
+            this.fileList = [{ name: row.name, url: row[key] }];
+          }
+          if (key !== "createTime") {
+            this.form[key] = row[key];
+          }
         }
       });
     },
@@ -224,11 +244,9 @@ export default {
       this.addIsEditor = true;
       this.form = {
         foodName: "",
-        image: [],
-        describe: "1",
         foodId: this.foodId
       };
-      this.imageBase64 = [];
+      this.fileList = [];
     },
     /**
      * @description: 获取推荐数据
@@ -256,15 +274,23 @@ export default {
       this.$refs.form.validate(async(valid) => {
         if (valid) {
           try {
-            const params = {
-              ...this.form,
-              image: this.imageBase64,
-              foodId: this.foodId
-            };
+            this.recommendedDataListLoading = true;
+            this.fileList.forEach((item) => {
+              if (item.raw) {
+                this.form[`file`] = item.raw;
+              }
+            });
+            const formData = new FormData();
+            for (const key in this.form) {
+              if (Object.prototype.hasOwnProperty.call(this.form, key) && this.form[key]) {
+                formData.append(key, this.form[key]);
+              }
+            }
+            console.log(formData);
             if (this.addIsEditor) {
-              await postRecommendAdd([params]);
+              await postRecommendAdd(formData);
             } else {
-              await postRecommendEdit(params);
+              await postRecommendEdit(formData);
             }
           } catch (error) {
             if (this.addIsEditor) {
@@ -274,6 +300,7 @@ export default {
             }
           } finally {
             this.dataFormIs = false;
+            this.recommendedDataListLoading = false;
             this.getRecommendedList();
           }
         } else {
@@ -281,26 +308,29 @@ export default {
         }
       });
     },
-    handleFileChange(file) {
-      this.form.image = [file];
-      // 检验选择文件格式
+    /**
+     * @description: 上传图片
+     * @param {*} file
+     * @param {*} fileList
+     * @return {*}
+     */
+    handleFileChange(file, fileList) {
+      if (this.$refs.uploadFile.uploadFiles.length > 1) {
+        this.$refs.uploadFile.uploadFiles.shift();
+      }
       const fileType = file.name.split(".").reverse()[0].toLowerCase();
       const imageList = ["png", "gif", "jpg", "jpeg", "webp"];// 图片文件格式列表
       if (!imageList.includes(fileType)) {
         alert("文件格式不正确");
         return false;
+      } else {
+        this.form.file = file.raw;
+        this.fileList = fileList;
       }
-      // 创建文件读取实例
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file.raw);
-      fileReader.onload = (e) => {
-        this.imageBase64 = e.target.result; // 获取base64字符串
-        this.$refs.form.validate();
-      };
     },
 
     handleRemove(file, fileList) {
-      this.form.image = [];
+      this.fileList = fileList;
     },
     handleExceed() {
       this.$message.warning(`当前限制选择 1 个文件`);
@@ -310,11 +340,6 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消"
       });
-    },
-    // 修改图片
-    handleChangeImage() {
-      this.imageBase64 = "";
-      this.form.image = [];
     }
   }
 };
@@ -327,32 +352,15 @@ export default {
   }
 }
 .recommend-list{
-  &-image {
-      width: 80px;
-      height: 80px;
-      display: block;
-      border-radius: 100%;
-      margin-left: 1rem;
-    }
-  &-center{
-    padding: 14px;width: 100%;display: inline-block;
-    .title{
-      font-size: 16px;
-      font-weight: 450;
-    }
-
-    .text{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      &-center{
-        width: 60%;
-        height: 1rem;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-    }
+  &-header{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    align-content: center;
+    height: 3rem;
+  }
+  &-table{
+    width: 100%;
   }
 }
 

@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-09 13:48:49
+ * @LastEditTime: 2023-09-20 22:48:01
  * @Description: file content
  * @FilePath: \vue-admin-template\src\router\index.js
  */
@@ -74,29 +74,11 @@ export const constantRoutes = [
         component: () => import("@/views/visitStore/visitStore"),
         meta: { title: "探店字典表", icon: "dashboard" }
       },
-      /*   {
-        path: "comment",
-        name: "comment",
-        component: () => import("@/views/comment/comment"),
-        meta: { title: "评价", icon: "dashboard" }
-      },
-      {
-        path: "recommend",
-        name: "recommend",
-        component: () => import("@/views/recommend/recommend"),
-        meta: { title: "推荐", icon: "el-icon-s-grid" }
-      },
-      {
-        path: "avoidPits",
-        name: "avoidPits",
-        component: () => import("@/views/avoidPits/avoidPits"),
-        meta: { title: "指南", icon: "el-icon-s-opportunity" }
-      }, */
       {
         path: "dictionary",
         name: "dictionary",
         component: () => import("@/views/dictionary/dictionary"),
-        meta: { title: "分类", icon: "el-icon-s-finance" }
+        meta: { title: "一级分类", icon: "el-icon-s-finance" }
       },
       {
         path: "twoDictionary",

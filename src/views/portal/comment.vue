@@ -2,54 +2,11 @@
  * @Author: 何元鹏
  * @Date: 2023-08-23 20:46:14
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-11 19:04:08
+ * @LastEditTime: 2023-09-20 22:13:21
 -->
 <template>
-  <div v-loading="recommendedDataListLoading" class="recommend-list">
-    <div v-if="commentAddIs">
-      <el-row v-for="(item,index) in commentDataList" :key="index" style="padding: 0.8rem 0.5rem;">
-        <el-col :span="24">
-          <div class="recommend-list-center">
-            <div class="text">
-              <span class="text-center">{{ item.comment }}</span>
-              <span class="text-button">
-                <el-button type="text" size="small" class="button" @click="handelRecommendedDelete(item)">删除</el-button>
-                <el-button type="text" size="small" class="button" @click="handelRecommendedEdit(item)">编辑</el-button>
-              </span>
-            </div>
-          </div>
-        </el-col>
-      </el-row>
-    </div>
-    <div v-else>
-      <el-form
-        ref="form"
-        :model="form"
-        label-width="80px"
-      >
-        <el-form-item
-          label="评论"
-        >
-          <el-input
-            v-model="form.comment"
-            size="medium"
-            style="width: 80%;"
-            placeholder="请输入评论内容"
-          />
-          <el-button
-            type="primary"
-            size="medium"
-            @click="handleCommentAdd"
-          >
-            确定
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-    <span
-      slot="footer"
-      class="dialog-footer"
-    >
+  <div class="comment">
+    <header class="comment-header">
       <el-button
         type="primary"
         size="medium"
@@ -57,7 +14,51 @@
       >
         新增
       </el-button>
-    </span>
+    </header>
+    <el-table
+      v-loading="commentLoading"
+      border
+      :data="commentDataList"
+      class="comment-table"
+    >
+      <el-table-column
+        label="评论内容"
+        header-align="center"
+        :show-overflow-tooltip="true"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <el-input v-if="commentEdit && commentIndex === scope.$index" v-model=" scope.row.comment " />
+          <span v-else>{{ scope.row.comment }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="操作"
+        width="180"
+        header-align="center"
+        :show-overflow-tooltip="true"
+        align="center"
+      >
+        <template slot-scope="scope">
+          <el-button
+            v-if="commentEdit && commentIndex === scope.$index"
+            size="mini"
+            @click="handelCommentSave(scope.$index,scope.row)"
+          >保存</el-button>
+          <el-button
+            v-else
+            size="mini"
+            @click="handelCommentEdit( scope.row,scope.$index,)"
+          >编辑</el-button>
+          <el-button
+            size="mini"
+            type="danger"
+            @click="handelRecommendedDelete(scope.row,scope.$index, )"
+          >删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
   </div>
 </template>
 
@@ -78,17 +79,12 @@ export default {
   // 组件状态值
   data() {
     return {
-      recommendedDataListLoading: true,
+      commentLoading: true,
       commentDataList: [],
-      form: {
-        comment: ""
-      },
-      commentAddIs: true
+      commentEdit: false,
+      commentIndex: 0
     };
   },
-  // 计算属性
-  computed: {},
-  // 侦听器
   watch: {
     commentId: {
       deep: true,
@@ -105,66 +101,64 @@ export default {
   // 组件方法
   methods: {
     /**
-     * @description:编辑
-     * @return {*}
-     */
-    async handelRecommendedEdit(item) {
-      this.commentAddIs = false;
-      this.form = item;
-    },
-    /**
-     * @description:新增
-     * @return {*}
-     */
-    handleCommentSure() {
-      this.commentAddIs = false;
-    },
-    /**
-     * @description: 提交评论
-     * @return {*}
-     */
-    handleCommentAdd() {
-      this.$refs.form.validate(async(valid) => {
-        this.recommendedDataListLoading = true;
-        if (valid) {
-          try {
-            const params = {
-              ...this.form,
-              productId: this.commentId
-            };
-            await postCommentAdd(params);
-            this.commentAddIs = true;
-            this.$message.success(`新增成功`);
-          } catch (error) {
-            this.$message.warning(`新增失败`);
-          } finally {
-            this.getCommentDataList();
-            this.recommendedDataListLoading = false;
-          }
-        } else {
-          return false;
-        }
-      });
-    },
-    /**
-     * @description: 获取探店数据
+     * @description: 获取
      * @return {*}
      */
     async getCommentDataList() {
-      this.recommendedDataListLoading = true;
+      this.commentLoading = true;
       try {
         const { data: { content }} = await getCommentById(
           {
             id: this.commentId,
             pageIndex: 1,
-            pageSize: 100
+            pageSize: 1000
           }
         );
         this.commentDataList = content;
       } catch (error) {
         this.$message.error("获取数据失败");
       } finally {
-        this.recommendedDataListLoading = false;
+        this.commentLoading = false;
+      }
+    },
+    /**
+     * @description:编辑
+     * @return {*}
+     */
+    async handelCommentEdit(row, index) {
+      console.log(row, index);
+      this.commentEdit = true;
+      this.commentIndex = index;
+    },
+    /**
+     * @description: 新增
+     * @return {*}
+     */
+    handleCommentSure() {
+      const commentData = {
+        comment: "",
+        productId: this.commentId
+      };
+      this.commentEdit = true;
+      this.commentIndex = 0;
+      this.commentDataList.unshift(commentData);
+    },
+    /**
+     * @description:提交
+     * @return {*}
+     */
+    async handelCommentSave(index, row) {
+      console.log(index, row);
+      try {
+        this.commentLoading = true;
+        await postCommentAdd(row);
+        this.$message.success(`新增成功`);
+      } catch (error) {
+        this.$message.error(`新增失败`);
+      } finally {
+        this.getCommentDataList();
+        this.commentLoading = false;
+        this.commentEdit = false;
       }
     },
 
@@ -173,30 +167,36 @@ export default {
      * @param {*} item
      * @return {*}
      */
-    handelRecommendedDelete(item) {
-      this.$confirm("此操作将永久删除选中门店, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(async() => {
-          try {
-            this.recommendedDataListLoading = true;
-            await deleteComment(item.id);
-            this.$message.success("删除成功!");
-          } catch (error) {
-            this.$message.warning("删除失败");
-          } finally {
-            this.getCommentDataList();
-            this.recommendedDataListLoading = false;
-          }
+    handelRecommendedDelete(row, index) {
+      console.log(row, index);
+      if (row.id) {
+        this.$confirm("此操作将永久删除, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
         })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
+          .then(async() => {
+            try {
+              this.commentLoading = true;
+              await deleteComment(row.id);
+              this.$message.success("删除成功!");
+            } catch (error) {
+              this.$message.error("删除失败");
+            } finally {
+              this.getCommentDataList();
+              this.commentLoading = false;
+            }
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除"
+            });
           });
-        });
+      } else {
+        this.commentDataList.splice(index, 1);
+        this.commentEdit = false;
+      }
     }
 
   }
@@ -204,40 +204,16 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.recommend-add{
-  .image {
-    max-width: 100px;
+.comment {
+  &-header{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    align-content: center;
+    height: 3rem;
   }
-}
-.recommend-list{
-  &-image {
-      width: 80px;
-      height: 80px;
-      display: block;
-      border-radius: 100%;
-      margin-left: 1rem;
-    }
   &-center{
     width: 100%;
-    display: inline-block;
-    .title{
-      font-size: 16px;
-      font-weight: 450;
-    }
-
-    .text{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      &-center{
-        width: 60%;
-        height: 1rem;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-    }
   }
 }
-
 </style>
