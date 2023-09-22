@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 16:58:21
+ * @LastEditTime: 2023-09-22 20:58:18
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -438,7 +438,7 @@ export default {
      * @param {*} row
      * @return {*}
      */
-    async handleEdit(row) {
+    handleEdit(row) {
       this.storeShow = false;
       this.operationType = "edit";
       console.log(row);
