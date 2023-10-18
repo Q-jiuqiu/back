@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-05-17 22:08:06
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 18:07:27
+ * @LastEditTime: 2023-10-17 18:48:28
  * @Description:
  * @FilePath: \vue-admin-template\src\api\index.js
  */
@@ -184,6 +184,12 @@ export function getCityFind(city) {
   });
 }
 // 查询城市分页
+export function getCityFindNewPage(id) {
+  return request({
+    url: `/dbs/pro/rest/dbs/city/dict/find/tree/new/${id}`,
+    method: "get"
+  });
+}
 export function getCityFindPage(id) {
   return request({
     url: `/dbs/pro/rest/dbs/city/dict/find/tree/${id}`,
@@ -295,3 +301,19 @@ export function getExpUserFind({ pageIndex, pageSize }) {
     method: "get"
   });
 }
+// 二级类置顶
+export function getTopLevaDist(id) {
+  return request({
+    url: `/dbs/pro/rest/dbs/top/levelDist/${id}`,
+    method: "get"
+  });
+}
+// 上传二维码
+export function postSaveImage(params) {
+  return request({
+    url: `/dbs/pro/rest/dbs/save/image`,
+    method: "post",
+    data: params
+  });
+}
+

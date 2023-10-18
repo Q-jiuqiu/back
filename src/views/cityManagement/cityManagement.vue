@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:44:28
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 20:20:25
+ * @LastEditTime: 2023-10-17 18:48:59
  * @Description: 首页
  * @FilePath: \vue-admin-template\src\views\portal\index.vue
 -->
@@ -80,11 +80,7 @@
           align="center"
         >
           <template slot-scope="scope">
-            <el-button
-              type="text"
-              size="small"
-              @click.stop="handleNewAddCity(scope.row)"
-            > 新增</el-button>
+
             <el-button
               type="text"
               size="small"
@@ -95,14 +91,7 @@
               size="small"
               @click.stop="handleEdit(scope.row)"
             >编辑</el-button>
-            <el-button
-              type="text"
-              size="small"
-              class="warn-btn"
-              @click.stop="handleShopDel(scope.row)"
-            >
-              删除
-            </el-button>
+
           </template>
         </el-table-column>
       </el-table>
@@ -166,7 +155,7 @@
                 slot="tip"
                 class="el-upload__tip"
               >
-                只能上传jpg/png文件，且不超过2M</div>
+                只能上传jpg/png/webp文件，且不超过2M</div>
             </el-upload>
           </el-form-item>
           <el-form-item
@@ -207,7 +196,7 @@
 </template>
 
 <script>
-import { postCityDict, getCityFind, deleteCityDict, postCityEdit, getCityFindPage } from "@/api";
+import { postCityDict, getCityFind, postCityEdit, getCityFindNewPage } from "@/api";
 
 export default {
   name: "Recommend",
@@ -251,7 +240,7 @@ export default {
           } else {
             id = -1;
           }
-          const { data } = await getCityFindPage(id);
+          const { data } = await getCityFindNewPage(id);
           function convertData(data) {
             return data.map(item => ({
               value: item.city,
@@ -289,7 +278,7 @@ export default {
     async initTableData() {
       try {
         this.tableLoading = true;
-        const { data } = await getCityFindPage(this.parentCity);
+        const { data } = await getCityFindNewPage(this.parentCity);
         const newData = data.map(item => ({ ...item, hasChildren: true }));
         this.tableData = newData;
 
@@ -303,7 +292,7 @@ export default {
     },
     // 查询下级
     async handelLoadClick(tree, treeNode, resolve) {
-      const { data } = await getCityFindPage(tree.id);
+      const { data } = await getCityFindNewPage(tree.id);
       const newData = data.map(item => {
         if (item.level !== "3") {
           return ({ ...item, hasChildren: true });
@@ -313,11 +302,7 @@ export default {
       });
       resolve(newData);
     },
-    // 新增城市下级
-    async handleNewAddCity(row) {
-      this.dialogVisible = true;
-      this.parentCity = row.id;
-    },
+
     // 重置搜索条件
     handleFilterReset() {
       this.name = "";
@@ -356,29 +341,7 @@ export default {
       this.canEdit = false;
       done();
     },
-    // 删除城市
-    handleShopDel(item) {
-      this.$confirm("此操作将永久删除选中城市, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(async() => {
-          try {
-            await deleteCityDict(item.id);
-            this.$message.success("删除成功!");
-            this.initTableData();
-          } catch (error) {
-            this.$message.warning("删除失败");
-          }
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
-    },
+
     // 查看
     async handlePreview(row) {
       this.dialogTitle = "查看城市信息";

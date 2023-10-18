@@ -153,14 +153,43 @@
               <el-input v-model="form.capitaConsumption" placeholder="请输入价格" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <!-- <el-col :span="8">
             <el-form-item
               label="购票小程序ID"
               :disabled="canEdit && !isEdit "
             >
               <el-input v-model="form.region" placeholder="请输入ID号" />
             </el-form-item>
-          </el-col>
+          </el-col> -->
+        </el-row>
+        <el-row>
+          <el-form-item
+            label="购票链接"
+          >
+            <el-upload
+              class="upload-demo"
+              action=""
+              accept=".jpg,.png,.webp"
+              multiple
+              :limit="1"
+              :file-list="fileCapitaList"
+              list-type="picture"
+              :auto-upload="false"
+              :on-remove="handleCapitaRemove"
+              :on-change="handleCapitaFileChange"
+            >
+              <el-button
+                size="small"
+                type="primary"
+              >点击上传</el-button>
+              <div
+                slot="tip"
+                class="el-upload__tip"
+              >
+                只能上传jpg/png/webp文件，且不超过2M</div>
+            </el-upload>
+
+          </el-form-item>
         </el-row>
         <el-row>
           <el-form-item
@@ -235,7 +264,7 @@
 </template>
 
 <script>
-import { addShop, editShop, getCityFindPage, getFindId } from "@/api";
+import { addShop, editShop, getCityFindPage, getFindId, postSaveImage } from "@/api";
 export default {
   name: "AddScape",
   components: { },
@@ -293,7 +322,8 @@ export default {
         environment: "",
         queue: "",
         capitaConsumption: "",
-        region: ""
+        region: "",
+        paymentCode: ""
       },
       rules: {
         name: [
@@ -312,6 +342,7 @@ export default {
         ]
       },
       fileList: [],
+      fileCapitaList: [],
       addStoreLoading: false,
       parentCity: -1,
       props: {
@@ -347,11 +378,42 @@ export default {
           if (key.includes("image")) {
             this.fileList.push({ url: row[key], name: row.name + key, id: key });
           }
+          if (key.includes("paymentCode")) {
+            this.fileCapitaList.push({
+              url: row[key]
+            });
+          }
         }
       });
     }
   },
   methods: {
+    /**
+     * @description: 上传二维码购票
+     * @return {*}
+     */
+    async  handleCapitaFileChange(file) {
+      const fileType = file.name.split(".").reverse()[0].toLowerCase();
+      const imageList = ["png", "jpg", "jpeg", "webp"];
+      if (!imageList.includes(fileType)) {
+        alert("文件格式不正确");
+        return false;
+      } else {
+        const formData = new FormData();
+        formData.append("file", file.raw);
+        try {
+          const url = await postSaveImage(formData);
+          console.log(url.message);
+          this.form.paymentCode = url.message;
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    },
+    handleCapitaRemove() {
+      this.fileCapitaList = [];
+      this.form.paymentCode = "";
+    },
     /**
      * @description:返回列表
      * @return {*}
@@ -375,7 +437,6 @@ export default {
                 this.form[`image${index + 1}`] = item.url;
               }
             });
-            console.log(this.form);
             this.form.city = Array.isArray(this.form.city) ? this.form.city.join("/") : this.form.city;
             const formData = new FormData();
             for (const key in this.form) {
@@ -420,7 +481,6 @@ export default {
         alert("文件格式不正确");
         return false;
       } else {
-        console.log(fileList);
         this.fileList = fileList;
       }
     },
@@ -431,7 +491,6 @@ export default {
      * @return {*}
      */
     handleRemove(file, fileList) {
-      console.log(file.id, fileList);
       this.fileList = fileList;
       delete this.form[file.id];
     },

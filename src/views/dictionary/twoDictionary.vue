@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 21:44:08
+ * @LastEditTime: 2023-09-23 13:46:10
 -->
 <template>
   <div class="portal-container">
@@ -98,6 +98,11 @@
           align="center"
         >
           <template slot-scope="scope">
+            <el-button
+              type="text"
+              size="small"
+              @click.stop="handleTopIndex(scope.row)"
+            >置顶</el-button>
             <el-button
               type="text"
               size="small"
@@ -248,7 +253,7 @@
 </template>
 
 <script>
-import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage } from "@/api";
+import { postDictAdd, getDictFind, deleteDictPit, postDictEdit, getCityFindPage, getTopLevaDist } from "@/api";
 export default {
   name: "TwoDictionary",
 
@@ -340,7 +345,7 @@ export default {
         this.totalElements = totalElements;
         this.tableData = content;
       } catch (error) {
-        this.$message.warning("获取数据失败");
+        this.$message.error("获取数据失败");
       } finally {
         this.tableLoading = false;
       }
@@ -425,7 +430,20 @@ export default {
       }];
       this.filterLists = [...a, ...this.filterList];
     },
-
+    /**
+     * @description: 置顶
+     * @return {*}
+     */
+    async  handleTopIndex(row) {
+      const { data } = await getTopLevaDist(row.id);
+      if (data) {
+        this.$message.success("置顶数据成功");
+        this.getTwoDictionaryDataList();
+      } else {
+        this.$message.error("置顶数据失败");
+      }
+      console.log(data);
+    },
     // 编辑
     handleEdit(row) {
       this.dialogTitle = "编辑数据字典";
@@ -442,7 +460,6 @@ export default {
           }
         }
       });
-      console.log(this.form, this.fileList);
     },
 
     // 分页

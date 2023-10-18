@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-06-06 20:59:09
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 21:27:52
+ * @LastEditTime: 2023-09-23 13:37:27
 -->
 <template>
   <div class="portal-container">
@@ -246,6 +246,7 @@ export default {
      */
     handleDialogClose(done) {
       this.dialogVisible = false;
+      this.$refs.form.resetFields();
       done();
     },
     /**
@@ -303,6 +304,8 @@ export default {
     handleVisitStoreAdd() {
       this.dialogVisible = true;
       this.dialogTitle = "新增数据字典";
+      this.$refs.form.resetFields();
+      this.fileList = [];
     },
 
     /**
@@ -329,6 +332,8 @@ export default {
             }
             const { data } = await getExpUserAdd(formData);
             this.$message.success(`新增成功${data}`);
+            this.$refs.form.resetFields();
+            this.fileList = [];
           } catch (error) {
             this.$message.error(`新增失败`);
           } finally {
