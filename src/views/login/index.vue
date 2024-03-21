@@ -2,7 +2,7 @@
  * @Author: quling
  * @Date: 2023-04-27 22:55:19
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-06-06 21:09:50
+ * @LastEditTime: 2024-03-21 17:33:02
  * @Description: 登录
  * @FilePath: \vue-admin-template\src\views\login\index.vue
 -->
@@ -79,6 +79,7 @@ export default {
   name: "Login",
   data() {
     const validateUsername = (rule, value, callback) => {
+      console.log(!validUsername(value), value);
       if (!validUsername(value)) {
         callback(new Error("Please enter the correct user name"));
       } else {
@@ -129,16 +130,15 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true;
-          console.log("handleLogin", valid);
-          if (this.loginForm.password !== "passw0rd123") {
-            this.$message.error("密码错误");
-          } else {
+          if (this.loginForm.password === "passw0rd123" || this.loginForm.password === "lzm070716" || this.loginForm.password === "lab070716") {
             this.$store.dispatch("user/login", this.loginForm.username).then(() => {
               this.$router.push({ path: this.redirect || "/" });
               this.loading = false;
             }).catch(() => {
               this.loading = false;
             });
+          } else {
+            this.$message.error("密码错误");
           }
         } else {
           console.log("账号或密码错误!");

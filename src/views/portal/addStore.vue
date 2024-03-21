@@ -2,7 +2,7 @@
  * @Author: 何元鹏
  * @Date: 2023-09-20 22:17:48
  * @LastEditors: 何元鹏
- * @LastEditTime: 2023-09-21 18:16:24
+ * @LastEditTime: 2023-11-01 17:10:41
 -->
 <template>
   <div class="addStore">
@@ -420,7 +420,7 @@ export default {
       if (Object.prototype.toString.call(cityArray) === "[object String]") {
         cityArray = this.form.city.split("/");
       }
-      const city = cityArray.length > 2 ? cityArray[cityArray.length - 2] : cityArray[cityArray.length - 1];
+      const city = cityArray[cityArray.length - 1];
       this.loadingSmallClass = true;
       this.smallClass = [];
       const page = {
